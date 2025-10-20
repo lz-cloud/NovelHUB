@@ -1,0 +1,5 @@
+[
+  {"id":1, "name":"Fantasy", "slug":"fantasy", "created_at":""},
+  {"id":2, "name":"Sci-Fi", "slug":"sci-fi", "created_at":""},
+  {"id":3, "name":"Romance", "slug":"romance", "created_at":""}
+]

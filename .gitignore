@@ -1,0 +1,26 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# PHP
+vendor/
+composer.lock
+
+# Env
+.env
+
+# Runtime storage (keep directories, ignore files)
+uploads/*
+!uploads/.gitkeep
+uploads/covers/*
+!uploads/covers/.gitkeep
+uploads/avatars/*
+!uploads/avatars/.gitkeep
+
+chapters/*
+!chapters/.gitkeep
+chapters/novel_*/**
+
