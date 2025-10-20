@@ -135,15 +135,60 @@ function next_chapter_id(int $novelId): int
 
 function handle_upload(array $file, string $targetDir): ?string
 {
-    if (!isset($file['tmp_name']) || $file['error'] !== UPLOAD_ERR_OK) return null;
+    if (!isset($file['tmp_name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) return null;
+    if (!is_uploaded_file($file['tmp_name'])) return null;
+
+    // Limit size to 5MB
+    $maxSize = 5 * 1024 * 1024; // 5 MiB
+    if (!empty($file['size']) && (int)$file['size'] > $maxSize) return null;
+
     if (!is_dir($targetDir)) @mkdir($targetDir, 0775, true);
-    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $name = bin2hex(random_bytes(8)) . ($ext ? ('.' . strtolower($ext)) : '');
-    $dest = rtrim($targetDir, '/') . '/' . $name;
-    if (move_uploaded_file($file['tmp_name'], $dest)) {
-        return $name;
+
+    // Detect MIME and validate type
+    $allowed = [
+        'image/jpeg' => 'jpg',
+        'image/png'  => 'png',
+        'image/gif'  => 'gif',
+        'image/webp' => 'webp',
+    ];
+
+    $mime = null;
+    if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        if ($finfo) {
+            $mime = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+        }
     }
-    return null;
+
+    // Fallback to extension mapping if MIME unknown
+    if (!$mime) {
+        $extFromName = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+        $mime = $extFromName === 'jpg' || $extFromName === 'jpeg' ? 'image/jpeg'
+            : ($extFromName === 'png' ? 'image/png'
+            : ($extFromName === 'gif' ? 'image/gif'
+            : ($extFromName === 'webp' ? 'image/webp' : null)));
+    }
+
+    if (!$mime || !isset($allowed[$mime])) return null;
+
+    // Basic image sanity check
+    $imgInfo = @getimagesize($file['tmp_name']);
+    if ($imgInfo === false) return null;
+    $width  = $imgInfo[0] ?? 0;
+    $height = $imgInfo[1] ?? 0;
+    if ($width <= 0 || $height <= 0 || $width > 6000 || $height > 6000) return null;
+
+    // Generate safe random filename with extension derived from MIME
+    $ext = $allowed[$mime];
+    $name = bin2hex(random_bytes(12)) . '.' . $ext;
+    $dest = rtrim($targetDir, '/') . '/' . $name;
+
+    if (!@move_uploaded_file($file['tmp_name'], $dest)) {
+        return null;
+    }
+    @chmod($dest, 0664);
+    return $name;
 }
 
 ?>
