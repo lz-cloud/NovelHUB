@@ -14,8 +14,20 @@ class DataManager
         if (!is_dir($dir)) {
             @mkdir($dir, 0775, true);
         }
+        if (!is_writable($dir)) {
+            @chmod($dir, 0775);
+            if (!is_writable($dir)) {
+                @chmod($dir, 0777);
+            }
+        }
         if (!file_exists($file)) {
             $this->writeJson($file, $default);
+        }
+        if (file_exists($file) && !is_writable($file)) {
+            @chmod($file, 0664);
+            if (!is_writable($file)) {
+                @chmod($file, 0666);
+            }
         }
     }
 
@@ -55,6 +67,15 @@ class DataManager
         }
         $tmp = $file . '.tmp';
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        // ensure directory permissions
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
+        if (!is_writable($dir)) {
+            @chmod($dir, 0775);
+            if (!is_writable($dir)) @chmod($dir, 0777);
+        }
         $fp = fopen($tmp, 'c+');
         if (!$fp) return false;
         try {
@@ -66,7 +87,13 @@ class DataManager
             flock($fp, LOCK_UN);
             fclose($fp);
         }
-        return rename($tmp, $file);
+        $ok = rename($tmp, $file);
+        if ($ok) {
+            @chmod($file, 0664);
+        } else {
+            @unlink($tmp);
+        }
+        return $ok;
     }
 
     // Atomically append an item with auto-increment id

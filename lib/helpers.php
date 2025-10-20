@@ -8,6 +8,31 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 $dm = new DataManager(DATA_DIR);
 
+// Ensure a default admin exists on first run
+function ensure_default_admin() {
+    global $dm;
+    // Read current users; if none, create default admin
+    $users = $dm->readJson(USERS_FILE, []);
+    if (!$users || count($users) === 0) {
+        $now = date('c');
+        $admin = [
+            'username' => defined('DEFAULT_ADMIN_USERNAME') ? DEFAULT_ADMIN_USERNAME : 'admin',
+            'email' => defined('DEFAULT_ADMIN_EMAIL') ? DEFAULT_ADMIN_EMAIL : 'admin@example.com',
+            'password_hash' => password_hash(defined('DEFAULT_ADMIN_PASSWORD') ? DEFAULT_ADMIN_PASSWORD : 'Admin@123', PASSWORD_DEFAULT),
+            'role' => 'admin',
+            'status' => 'active',
+            'created_at' => $now,
+            'profile' => [
+                'nickname' => '管理员',
+                'avatar' => null,
+                'bio' => '系统初始管理员账号',
+            ],
+        ];
+        $dm->appendWithId(USERS_FILE, $admin);
+    }
+}
+ensure_default_admin();
+
 function current_user()
 {
     return $_SESSION['user'] ?? null;
