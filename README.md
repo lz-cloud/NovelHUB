@@ -137,8 +137,9 @@
 4. 更新 `novels.json` 中对应作品的 `updated_at` 与 `last_chapter_id`
 
 搜索与筛选：
-- 通过遍历 `novels.json` 实现按标题和作者名的搜索
-- 可扩展：根据分类、标签或状态进行筛选
+- 首页支持按标题与作者名关键字搜索
+- 支持分类筛选与状态筛选（连载中/已完结）
+- 支持排序：按最近更新、按创建时间
 
 书架：
 - `shelf.php?action=add&novel_id=...` 将关系行追加到 `user_bookshelves.json`

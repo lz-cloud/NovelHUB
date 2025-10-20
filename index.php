@@ -10,10 +10,16 @@ if (!function_exists('mb_strimwidth')) {
         return substr($s, 0, $width) . $trimmarker;
     }
 }
+
 $novels = load_novels();
-// sort by updated_at desc
-usort($novels, function($a,$b){ return strtotime($b['updated_at'] ?? $b['created_at'] ?? 'now') <=> strtotime($a['updated_at'] ?? $a['created_at'] ?? 'now'); });
+$categories = json_decode(file_get_contents(CATEGORIES_FILE), true) ?: [];
+
 $query = trim($_GET['q'] ?? '');
+$category = isset($_GET['category']) ? (int)$_GET['category'] : 0;
+$statusFilter = $_GET['status'] ?? '';
+$sort = $_GET['sort'] ?? 'updated';
+$validStatuses = ['ongoing','completed'];
+
 if ($query !== '') {
     $q = mb_strtolower($query);
     $novels = array_values(array_filter($novels, function($n) use ($q){
@@ -21,6 +27,30 @@ if ($query !== '') {
         return (strpos(mb_strtolower($n['title'] ?? ''), $q) !== false) || (strpos(mb_strtolower($authorName), $q) !== false);
     }));
 }
+
+if ($category) {
+    $novels = array_values(array_filter($novels, function($n) use ($category){
+        $cats = array_map('intval', $n['category_ids'] ?? []);
+        return in_array($category, $cats, true);
+    }));
+}
+
+if (in_array($statusFilter, $validStatuses, true)) {
+    $novels = array_values(array_filter($novels, function($n) use ($statusFilter){
+        return ($n['status'] ?? 'ongoing') === $statusFilter;
+    }));
+}
+
+// sort
+usort($novels, function($a,$b) use ($sort) {
+    if ($sort === 'created') {
+        return strtotime($b['created_at'] ?? 'now') <=> strtotime($a['created_at'] ?? 'now');
+    }
+    // default: updated
+    $bu = strtotime($b['updated_at'] ?? $b['created_at'] ?? 'now');
+    $au = strtotime($a['updated_at'] ?? $a['created_at'] ?? 'now');
+    return $bu <=> $au;
+});
 ?>
 <!doctype html>
 <html lang="zh-CN">
@@ -47,8 +77,34 @@ if ($query !== '') {
 </nav>
 <div class="container my-4">
   <form class="row g-2 mb-3" method="get">
-    <div class="col-auto"><input type="text" class="form-control" name="q" placeholder="搜索标题或作者" value="<?php echo e($query); ?>"></div>
-    <div class="col-auto"><button class="btn btn-primary">搜索</button></div>
+    <div class="col-12 col-md-auto">
+      <input type="text" class="form-control" name="q" placeholder="搜索标题或作者" value="<?php echo e($query); ?>">
+    </div>
+    <div class="col-6 col-md-auto">
+      <select class="form-select" name="category">
+        <option value="0">全部分类</option>
+        <?php foreach ($categories as $c): ?>
+          <option value="<?php echo (int)$c['id']; ?>" <?php if ((int)$category === (int)$c['id']) echo 'selected'; ?>><?php echo e($c['name']); ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="col-6 col-md-auto">
+      <select class="form-select" name="status">
+        <option value="">全部状态</option>
+        <option value="ongoing" <?php if ($statusFilter==='ongoing') echo 'selected'; ?>>连载中</option>
+        <option value="completed" <?php if ($statusFilter==='completed') echo 'selected'; ?>>已完结</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-auto">
+      <select class="form-select" name="sort">
+        <option value="updated" <?php if ($sort==='updated') echo 'selected'; ?>>按最近更新</option>
+        <option value="created" <?php if ($sort==='created') echo 'selected'; ?>>按创建时间</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-auto">
+      <button class="btn btn-primary">搜索</button>
+      <a class="btn btn-outline-secondary" href="/">重置</a>
+    </div>
   </form>
 
   <div class="row row-cols-1 row-cols-md-3 g-4">
