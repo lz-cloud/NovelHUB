@@ -199,6 +199,12 @@
 
 4) 初始数据
 - 项目已包含空的 `users.json`、`novels.json`、`user_bookshelves.json`，以及示例 `categories.json`
+- 首次运行会自动创建默认管理员账号（仅当 `users.json` 为空时）：
+  - 用户名：`admin`
+  - 邮箱：`admin@example.com`
+  - 初始密码：`Admin@123`
+  - 登录后请尽快在“个人资料”或通过“管理员后台”修改密码
+- 运行期会自动确保 `data/`、`uploads/`、`chapters/` 可写（尝试 `chmod 775/777`），以及相关 JSON 文件可写（尝试 `chmod 664/666`）
 
 5) 安全建议（可选增强）
 - 结合 CSRF Token

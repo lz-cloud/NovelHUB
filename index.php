@@ -58,7 +58,10 @@ usort($novels, function($a,$b) use ($sort) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NovelHub</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/style.css" rel="stylesheet">
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -75,7 +78,7 @@ usort($novels, function($a,$b) use ($sort) {
     </div>
   </div>
 </nav>
-<div class="container my-4">
+<div class="container my-4 nh-list">
   <form class="row g-2 mb-3" method="get">
     <div class="col-12 col-md-auto">
       <input type="text" class="form-control" name="q" placeholder="搜索标题或作者" value="<?php echo e($query); ?>">

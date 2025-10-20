@@ -31,13 +31,16 @@ $nextId = $currentIndex !== false && $currentIndex < count($chapterIds)-1 ? $cha
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?php echo e($novel['title']); ?> - <?php echo e($chapter['title']); ?> - NovelHub</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/style.css" rel="stylesheet">
   <style>
     .reading-container { max-width: 840px; margin: 0 auto; }
-    .chapter-content { white-space: pre-wrap; line-height: 1.85; font-size: 1.05rem; }
+    .chapter-content { white-space: pre-wrap; }
   </style>
 </head>
-<body>
+<body class="reading">
 <div class="container py-3 reading-container">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
