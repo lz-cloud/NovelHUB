@@ -16,6 +16,9 @@ define('USERS_FILE', DATA_DIR . '/users.json');
 define('NOVELS_FILE', DATA_DIR . '/novels.json');
 define('CATEGORIES_FILE', DATA_DIR . '/categories.json');
 define('BOOKSHELVES_FILE', DATA_DIR . '/user_bookshelves.json');
+// Reading-related files
+define('READING_PROGRESS_FILE', DATA_DIR . '/reading_progress.json');
+define('BOOKMARKS_FILE', DATA_DIR . '/bookmarks.json');
 
 // General settings
 ini_set('session.cookie_httponly', '1');
@@ -40,6 +43,8 @@ $ensureFiles = [
     USERS_FILE => '[]',
     NOVELS_FILE => '[]',
     BOOKSHELVES_FILE => '[]',
+    READING_PROGRESS_FILE => '[]',
+    BOOKMARKS_FILE => '[]',
 ];
 foreach ($ensureFiles as $file => $defaultContent) {
     if (!file_exists($file)) {
