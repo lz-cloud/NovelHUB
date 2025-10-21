@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/lib/helpers.php';
+require_once __DIR__ . '/lib/Notifier.php';
 require_login();
 
 $novel_id = (int)($_GET['novel_id'] ?? $_POST['novel_id'] ?? 0);
@@ -59,8 +60,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data['status'] = in_array($status, ['published','draft']) ? $status : 'published';
             $data['updated_at'] = $now;
         }
+        // Simple sensitive words detection (demo)
+        $sensitive = ['暴恐','涉政','违法'];
+        $flags = [];
+        foreach ($sensitive as $sw) { if (mb_strpos($content, $sw) !== false) { $flags[] = 'sensitive:'.$sw; } }
+        if ($flags) {
+            $audit = json_decode(@file_get_contents(ADMIN_AUDIT_FILE), true) ?: [];
+            $max = 0; foreach ($audit as $a) { $max = max($max, (int)($a['id'] ?? 0)); }
+            $audit[] = ['id'=>$max+1,'type'=>'chapter','novel_id'=>$novel_id,'chapter_id'=>$chapter_id,'title'=>$title,'status'=>'pending','flags'=>$flags,'created_at'=>$now];
+            @file_put_contents(ADMIN_AUDIT_FILE, json_encode($audit, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        }
         file_put_contents($dir . '/' . $chapter_id . '.json', json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
         update_novel($novel_id, ['updated_at' => $now, 'last_chapter_id' => $chapter_id]);
+        // Notify followers if published
+        if (($data['status'] ?? 'published') === 'published') {
+            $list = $dm->readJson(BOOKSHELVES_FILE, []);
+            $sentTo = [];
+            foreach ($list as $r) {
+                if ((int)($r['novel_id'] ?? 0) === $novel_id) $sentTo[(int)($r['user_id'] ?? 0)] = true;
+            }
+            $notifier = new Notifier();
+            foreach (array_keys($sentTo) as $uid) {
+                if ($uid <= 0) continue;
+                $notifier->notify($uid, 'update', '收藏作品有新章节', '你收藏的作品《'.($novel['title'] ?? '').'》更新：'.$title, '/reading.php?novel_id='.$novel_id.'&chapter_id='.$chapter_id);
+            }
+        }
         header('Location: /dashboard.php');
         exit;
     }

@@ -222,9 +222,125 @@
 - 发布/编辑章节：`/publish_chapter.php?novel_id=... [&chapter_id=...]`
 - 阅读：`/reading.php?novel_id=...&chapter_id=...`
 - 书架：`/shelf.php`
-- 个人资料：`/profile.php`
-- 管理后台：`/admin.php`（管理员可见）
+- 个人中心：`/profile.php`（统计、成就、时间轴、通知、书架增强）
+- 书籍详情：`/novel_detail.php`（Z-Library 风格布局、评分评论、推荐、下载导出）
+- 管理仪表盘：`/admin_dashboard.php`（数据概览、内容管理、用户权限、系统管理）
+- 传统管理后台：`/admin.php`
 
 ---
 
-如需扩展为 OAuth 登录、富文本编辑器、全文搜索、统计报表等功能，可在现有文件存储基础上逐步演进，或在后续阶段迁移到数据库。
+## 6. 数据结构（新增/扩展）
+
+增强后的文件存储结构：
+
+```
+data/
+├── users/
+│   ├── {user_id}.json           # 用户扩展数据（如书架分类）
+│   └── achievements/            # 预留：用户成就持久化
+├── novels/
+│   ├── metadata/                # 预留：每本书独立元数据
+│   └── reviews/                 # 书评数据（每本一本文件）
+├── system/
+│   ├── categories.json          # 分类
+│   ├── settings.json            # 系统设置
+│   ├── notifications.json       # 通知中心（全量）
+│   └── statistics.json          # 平台统计缓存
+├── admin/
+│   ├── audit_log.json           # 审核日志（预留）
+│   └── operations.json          # 管理操作日志
+└── cache/                       # 统计缓存
+```
+
+关键 JSON 结构定义：
+
+- system/notifications.json（数组）
+```json
+[
+  {
+    "id": 1,
+    "user_id": 2,
+    "type": "system|interaction|update",
+    "title": "收到新的评分与评论",
+    "message": "你的作品《xxx》收到一条新评论。",
+    "link": "/novel_detail.php?novel_id=10#reviews",
+    "read": false,
+    "created_at": "2025-01-06T12:00:00+08:00"
+  }
+]
+```
+
+- novels/reviews/{novel_id}.json（数组）
+```json
+[
+  {
+    "id": 1,
+    "novel_id": 10,
+    "user_id": 2,
+    "rating": 5,
+    "content": "<p>很好看！</p>",
+    "likes": 0,
+    "parent_id": null,
+    "created_at": "2025-01-06T12:00:00+08:00"
+  }
+]
+```
+
+- users/{id}.json（对象，扩展字段）
+```json
+{
+  "shelf_categories": ["默认", "正在阅读", "想读", "已读完"]
+}
+```
+
+- admin/operations.json（数组）
+```json
+[
+  {"id":1, "user_id":1, "username":"admin", "role":"super_admin", "action":"update_settings", "meta":{}, "ip":"127.0.0.1", "ua":"...", "created_at":"2025-01-06T12:00:00+08:00"}
+]
+```
+
+- data/user_bookshelves.json（数组，扩展）
+```json
+[
+  {"user_id": 2, "novel_id": 10, "category": "默认", "added_at": "2025-01-06T12:00:00+08:00"}
+]
+```
+
+数据关联关系：
+- 用户（users.json.id）1—N 作品（novels.json.author_id）
+- 作品（novels.json.id）1—N 章节（/chapters/novel_{id}/{chapter_id}.json）
+- 作品（id）1—N 评论（/data/novels/reviews/{id}.json）
+- 用户（id）N—N 收藏作品（data/user_bookshelves.json）
+- 用户（id）1—N 阅读进度（data/reading_progress.json）
+
+---
+
+## 7. 关键实现说明
+
+- 数据统计（lib/Statistics.php）
+  - computeUserStats：统计创作（作品/字数/章节）、阅读（估算时长、读完数量、书架）、互动（获得收藏/评论）
+  - computeNovelStats：评分、评论、章节数、最后更新、收藏、推荐指数
+  - computePlatformOverview：用户/作品/章节/收藏/阅读等全局统计
+  - buildUserTimeline：聚合阅读进度、发布新章、收藏等动态
+
+- 权限系统（lib/Auth.php）
+  - 角色：super_admin、content_admin（兼容 legacy admin）、user
+  - requireRole：用于后台入口拦截
+  - OperationLog：管理操作写入 data/admin/operations.json
+
+- 文件导出（lib/Export.php）
+  - exportTXT/exportEPUB/exportPDF：生成至 uploads/exports/
+  - EPUB 使用 ZipArchive 构建标准目录
+  - PDF 使用极简文本 PDF 生成器（单页、Helvetica，适合纯文本导出）
+
+- 缓存机制（lib/Cache.php）
+  - 文件缓存（data/cache），提供 get/set/remember/clear
+
+- 响应式样式（assets/style.css + 各页内联）
+  - 使用 Bootstrap 5 的栅格系统
+  - 自定义 zlib-layout（详情页）、timeline（时间轴）等组件样式
+
+---
+
+如需扩展为 OAuth 登录、富文本编辑器、全文搜索、更多维度的统计报表等功能，可在现有文件存储基础上逐步演进，或在后续阶段迁移到数据库。

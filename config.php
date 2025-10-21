@@ -80,4 +80,44 @@ define('DEFAULT_ADMIN_USERNAME', 'admin');
 define('DEFAULT_ADMIN_EMAIL', 'admin@example.com');
 define('DEFAULT_ADMIN_PASSWORD', 'Admin@123');
 
+// Extended storage layout (for enhanced features)
+// Users
+define('USERS_DIR', DATA_DIR . '/users');
+define('USER_ACHIEVEMENTS_DIR', USERS_DIR . '/achievements');
+// Novels
+define('NOVELS_DIR', DATA_DIR . '/novels');
+define('NOVEL_METADATA_DIR', NOVELS_DIR . '/metadata');
+// covers are stored under uploads/covers
+define('NOVEL_REVIEWS_DIR', NOVELS_DIR . '/reviews');
+// System-wide
+define('SYSTEM_DIR', DATA_DIR . '/system');
+define('SYSTEM_CATEGORIES_FILE', DATA_DIR . '/categories.json'); // alias
+define('SYSTEM_SETTINGS_FILE', SYSTEM_DIR . '/settings.json');
+define('NOTIFICATIONS_FILE', SYSTEM_DIR . '/notifications.json');
+define('SYSTEM_STATISTICS_FILE', SYSTEM_DIR . '/statistics.json');
+// Admin
+define('ADMIN_DIR', DATA_DIR . '/admin');
+define('ADMIN_AUDIT_FILE', ADMIN_DIR . '/audit_log.json');
+define('ADMIN_OPERATIONS_FILE', ADMIN_DIR . '/operations.json');
+// Cache
+define('CACHE_DIR', DATA_DIR . '/cache');
+
+// Ensure extended directories/files
+$moreDirs = [USERS_DIR, USER_ACHIEVEMENTS_DIR, NOVELS_DIR, NOVEL_METADATA_DIR, NOVEL_REVIEWS_DIR, SYSTEM_DIR, ADMIN_DIR, CACHE_DIR, UPLOADS_DIR . '/exports'];
+foreach ($moreDirs as $d) {
+    if (!is_dir($d)) { @mkdir($d, 0775, true); }
+    if (!is_writable($d)) { @chmod($d, 0775); if (!is_writable($d)) @chmod($d, 0777); }
+}
+$ensureMoreFiles = [
+    SYSTEM_SETTINGS_FILE => json_encode(['site_name'=>'NovelHub','logo'=>null,'description'=>'开源小说阅读与创作平台','reading'=>['default_font'=>'system','theme'=>'day'],'uploads'=>['max_file_size'=>5*1024*1024,'image_formats'=>['jpg','png','gif','webp']]], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+    NOTIFICATIONS_FILE => '[]',
+    SYSTEM_STATISTICS_FILE => json_encode(['generated_at'=>date('c')], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+    ADMIN_AUDIT_FILE => '[]',
+    ADMIN_OPERATIONS_FILE => '[]',
+];
+foreach ($ensureMoreFiles as $file => $content) {
+    if (!file_exists($file)) { @file_put_contents($file, $content); }
+    if (!is_writable($file)) { @chmod($file, 0664); if (!is_writable($file)) @chmod($file, 0666); }
+}
+
 ?>
