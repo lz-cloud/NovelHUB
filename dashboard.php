@@ -29,6 +29,7 @@ $myNovels = array_values(array_filter(load_novels(), function($n) use ($user){ r
     <a class="btn btn-primary" href="/create_novel.php">+ 创建新小说</a>
     <?php if (is_admin()): ?>
       <a class="btn btn-warning" href="/admin.php">管理员后台</a>
+      <a class="btn btn-warning" href="/admin_dashboard.php">管理仪表盘</a>
     <?php endif; ?>
   </div>
 

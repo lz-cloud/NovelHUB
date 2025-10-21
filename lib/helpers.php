@@ -49,7 +49,8 @@ function require_login()
 function is_admin(): bool
 {
     $u = current_user();
-    return $u && isset($u['role']) && $u['role'] === 'admin';
+    $role = $u['role'] ?? 'user';
+    return in_array($role, ['admin','content_admin','super_admin'], true);
 }
 
 function e($str)

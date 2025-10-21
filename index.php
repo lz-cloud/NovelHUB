@@ -115,17 +115,18 @@ usort($novels, function($a,$b) use ($sort) {
       <div class="col">
         <div class="card h-100">
           <?php if (!empty($n['cover_image'])): ?>
-            <img src="/uploads/covers/<?php echo e($n['cover_image']); ?>" class="card-img-top" alt="cover">
+            <img src="/uploads/covers/<?php echo e($n['cover_image']); ?>" class="card-img-top" alt="cover" loading="lazy">
           <?php endif; ?>
           <div class="card-body">
             <h5 class="card-title"><?php echo e($n['title'] ?? ''); ?></h5>
             <p class="card-text text-muted">作者：<?php echo e(get_user_display_name((int)($n['author_id'] ?? 0))); ?></p>
             <p class="card-text"><?php echo e(mb_strimwidth($n['description'] ?? '', 0, 120, '...','UTF-8')); ?></p>
             <?php $chapters = list_chapters((int)$n['id'],'published'); if ($chapters): $first = $chapters[0]; ?>
-              <a class="btn btn-sm btn-primary" href="/reading.php?novel_id=<?php echo (int)$n['id']; ?>&chapter_id=<?php echo (int)$first['id']; ?>">开始阅读</a>
+              <a class="btn btn-sm btn-primary me-2" href="/reading.php?novel_id=<?php echo (int)$n['id']; ?>&chapter_id=<?php echo (int)$first['id']; ?>">开始阅读</a>
             <?php else: ?>
-              <span class="badge text-bg-secondary">暂未发布章节</span>
+              <span class="badge text-bg-secondary me-2">暂未发布章节</span>
             <?php endif; ?>
+            <a class="btn btn-sm btn-outline-secondary" href="/novel_detail.php?novel_id=<?php echo (int)$n['id']; ?>">详情</a>
           </div>
         </div>
       </div>

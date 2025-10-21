@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/lib/helpers.php';
+require_once __DIR__ . '/lib/Notifier.php';
 require_login();
 
 global $dm;
@@ -13,8 +14,13 @@ function add_to_shelf(int $userId, int $novelId)
     foreach ($list as $row) {
         if ((int)$row['user_id'] === $userId && (int)$row['novel_id'] === $novelId) return true;
     }
-    $list[] = ['user_id'=>$userId,'novel_id'=>$novelId,'added_at'=>date('c')];
-    return $dm->writeJson(BOOKSHELVES_FILE, $list);
+    $list[] = ['user_id'=>$userId,'novel_id'=>$novelId,'category'=>'默认','added_at'=>date('c')];
+    $ok = $dm->writeJson(BOOKSHELVES_FILE, $list);
+    if ($ok) {
+        $novel = find_novel($novelId);
+        if ($novel) { (new Notifier())->notify((int)$novel['author_id'], 'interaction', '作品被收藏', '你的作品《'.($novel['title']??'').'》被用户收藏。', '/novel_detail.php?novel_id='.$novelId); }
+    }
+    return $ok;
 }
 
 function remove_from_shelf(int $userId, int $novelId)
