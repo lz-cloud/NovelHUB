@@ -1,0 +1,186 @@
+/* NovelHub Reader - Responsive, Modern UI */
+:root{
+  /* Color system */
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --background-light: #ffffff;
+  --background-dark: #0e0f12;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+
+  /* Reader themes */
+  --paper-bg: #fffdf7;
+  --paper-fg: #222222;
+  --paper-accent: #eae6d8;
+
+  /* Surfaces */
+  --surface: rgba(255,255,255,0.7);
+  --surface-dark: rgba(23,24,28,0.65);
+  --surface-border: rgba(0,0,0,0.08);
+
+  /* Controls */
+  --control-bg: rgba(18,20,24,0.45);
+  --control-blur: 12px;
+  --control-fg: #ffffff;
+  --control-muted: rgba(255,255,255,0.6);
+  --control-border: rgba(255,255,255,0.15);
+
+  /* Typography scale */
+  --font-base: 18px;
+  --font-small: 0.875rem; /* ~14px */
+  --font-body: 1rem;      /* 16-20px responsive */
+  --font-title: 1.8rem;
+  --font-title-lg: 2.2rem;
+
+  /* Reader typography */
+  --reader-font-size: var(--font-base);
+  --reader-line-height: 1.65;
+  --reader-para-space: 0.9em;
+  --reader-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+
+  /* Effects */
+  --radius: 14px;
+  --shadow-sm: 0 4px 14px rgba(0,0,0,0.08);
+  --shadow-lg: 0 24px 60px rgba(0,0,0,0.18);
+
+  /* Layout */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+/* Theme presets */
+body.theme-day{
+  --paper-bg:#fffdf7;
+  --paper-fg:#222;
+  --control-bg: rgba(25,27,31,0.45);
+}
+body.theme-night{
+  --paper-bg:#0f1115;
+  --paper-fg:#d6d7db;
+  --surface: rgba(30,33,37,0.6);
+  --control-bg: rgba(9,10,12,0.6);
+  --background-dark: #050608;
+}
+body.theme-eye{
+  --paper-bg:#faf4d3;
+  --paper-fg:#202020;
+  --surface: rgba(255,255,255,0.7);
+}
+
+html{ height:100%; }
+body.reading{
+  margin:0;
+  min-height:100%;
+  color:var(--paper-fg);
+  background: radial-gradient(1200px 800px at 50% -10%, rgba(52,152,219,0.08), transparent 60%),
+              radial-gradient(1000px 700px at 80% 20%, rgba(44,62,80,0.12), transparent 55%),
+              #f6f6f6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Responsive root font-size */
+@media (max-width: 768px){ html{ font-size: 15px; } }
+@media (min-width: 769px) and (max-width: 1024px){ html{ font-size: 16px; } }
+@media (min-width: 1025px){ html{ font-size: 17px; } }
+
+/* App container */
+.nh-reader{ min-height:100vh; position:relative; padding-top: calc(56px + var(--safe-top)); padding-bottom: calc(72px + var(--safe-bottom)); }
+
+/* Top/Bottom bars */
+.nh-reader__topbar,
+.nh-reader__bottombar{
+  position:fixed; left:0; right:0; z-index:1000; color:var(--control-fg);
+  background: var(--control-bg);
+  -webkit-backdrop-filter: blur(var(--control-blur));
+  backdrop-filter: blur(var(--control-blur));
+  border-bottom: 1px solid var(--control-border);
+  opacity:0; pointer-events:none; transform: translateY(-8px);
+  transition: transform .25s ease, opacity .25s ease;
+}
+.nh-reader__bottombar{ bottom:0; border-top: 1px solid var(--control-border); border-bottom:none; transform: translateY(8px); }
+.nh-reader__topbar{ top:0; padding-top: var(--safe-top); }
+.controls-visible .nh-reader__topbar,
+.controls-visible .nh-reader__bottombar{ opacity:1; pointer-events:auto; transform: translateY(0); }
+
+.nh-reader__row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; }
+.nh-reader__title{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nh-reader__chapter-select{ max-width:50vw; }
+
+/* Reader viewport */
+.nh-reader__viewport{ margin: 0 auto; padding: 16px 14px; border-radius: var(--radius); background: var(--paper-bg); color: var(--paper-fg); box-shadow: var(--shadow-sm); }
+.nh-reader__viewport.width-narrow{ max-width: 38em; }
+.nh-reader__viewport.width-standard{ max-width: 44em; }
+.nh-reader__viewport.width-wide{ max-width: 52em; }
+
+/* Horizontal pagination */
+.nh-reader__viewport{ height: calc(var(--vh, 1vh) * 100 - 160px); overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.nh-reader__viewport::-webkit-scrollbar{ display:none; }
+
+/* Content */
+.nh-reader__content{ font-size: var(--reader-font-size); line-height: var(--reader-line-height); font-family: var(--reader-font-family); column-gap: 0; height: 100%; }
+.nh-reader__content p{ margin: 0 0 var(--reader-para-space) 0; text-align: justify; }
+.nh-reader__content img{ max-width:100%; height:auto; display:block; margin: 0.75rem auto; border-radius: 6px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+
+/* Tap zones */
+.nh-reader__tap-zones{ position: fixed; inset: 0; z-index: 900; display: grid; grid-template-columns: 30% 40% 30%; }
+.nh-reader__tap-zones .zone{ height: 100%; }
+.nh-reader__tap-zones .zone.center{ cursor: pointer; }
+
+/* Panels */
+.nh-reader__panel{ position: fixed; left: 0; right: 0; bottom: calc(64px + var(--safe-bottom)); z-index: 1200; max-width: 980px; margin: 0 auto; background: var(--surface-dark); color: #fff; border-radius: 12px; padding: 12px 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: all .2s ease; box-shadow: var(--shadow-lg); }
+.nh-reader__panel.show{ opacity:1; pointer-events:auto; transform: translateY(0); }
+.nh-reader__panel .row > div{ margin-bottom: 8px; }
+.nh-reader__panel select{ width: 100%; }
+
+/* Bottom progress */
+.nh-reader__progress{ display:flex; align-items:center; gap:10px; }
+.nh-reader__progress input[type=range]{ width: 52vw; accent-color: var(--secondary-color); }
+
+/* Mobile bottom nav */
+.nh-reader__mobilebar{ position:fixed; left:0; right:0; bottom:0; z-index:1100; background: var(--control-bg); -webkit-backdrop-filter: blur(var(--control-blur)); backdrop-filter: blur(var(--control-blur)); border-top:1px solid var(--control-border); padding: 6px 10px calc(6px + var(--safe-bottom)); }
+.nh-reader__mobilebar .mobilebar__grid{ display:grid; grid-template-columns: repeat(5, 1fr); align-items:center; gap:6px; }
+.mobilebar__btn{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#fff; text-decoration:none; min-height:44px; border-radius:10px; padding:6px 4px; transition: background .2s ease, transform .1s ease; }
+.mobilebar__btn:hover{ background: rgba(255,255,255,0.06); }
+.mobilebar__btn:active{ transform: scale(0.98); }
+.mobilebar__label{ font-size:.75rem; color: var(--control-muted); }
+.mobilebar__icon{ width:22px; height:22px; fill: currentColor; }
+
+/* Focus mode */
+.focus-mode .nh-reader__topbar,
+.focus-mode .nh-reader__bottombar,
+.focus-mode .nh-reader__mobilebar,
+.focus-mode .nh-reader__panel{ display:none !important; }
+
+/* Dimming overlay for brightness control */
+.nh-reader__dim{ position:fixed; inset:0; pointer-events:none; background: #000; opacity: 0; transition: opacity .2s ease; z-index: 800; }
+
+/* Pull to refresh */
+.nh-reader__pull-indicator{ position:fixed; top:0; left:50%; transform: translate(-50%, -120%); z-index: 1050; background: var(--control-bg); color:#fff; -webkit-backdrop-filter: blur(var(--control-blur)); backdrop-filter: blur(var(--control-blur)); padding:6px 10px; border-radius: 12px; opacity:0; transition: transform .25s ease, opacity .25s ease; }
+.nh-reader__pull-indicator.show{ transform: translate(-50%, 20px); opacity:1; }
+
+/* Animations */
+@keyframes fade-in{ from{opacity:0} to{opacity:1} }
+@keyframes slide-up{ from{ transform: translateY(8px); opacity:0 } to{ transform: translateY(0); opacity:1 } }
+.nh-fade-in{ animation: fade-in .2s ease both; }
+.nh-slide-up{ animation: slide-up .25s ease both; }
+
+/* Accessibility and motion */
+@media (prefers-reduced-motion: reduce){
+  *{ animation: none !important; transition: none !important; }
+}
+
+/* Breakpoints */
+@media (max-width: 768px){
+  .nh-reader__title{ display:none; }
+  .nh-reader__chapter-select{ max-width: 60vw; }
+  .nh-reader__viewport{ height: calc(var(--vh, 1vh) * 100 - 220px); }
+}
+
+@media (min-width: 769px) and (max-width: 1024px){
+  .nh-reader__viewport{ height: calc(var(--vh, 1vh) * 100 - 200px); }
+}
+
+@media (min-width: 1025px){
+  .nh-reader__viewport{ height: calc(var(--vh, 1vh) * 100 - 180px); }
+}
