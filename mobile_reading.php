@@ -122,12 +122,21 @@ $deviceClass = is_mobile_device() ? 'device-mobile' : 'device-desktop';
   <!-- 设置面板：字体 -->
   <div class="settings-panel" id="settings-panel">
     <div class="setting-section">
-      <h3 style="margin:6px 6px 8px; font-size:14px; color:var(--text-secondary);">字体设置</h3>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:4px 6px 6px;">
+        <h3 style="margin:0; font-size:14px; color:var(--text-secondary);">字体设置</h3>
+        <button id="close-settings" title="关闭" style="background:none;border:none;font-size:16px;color:var(--text-secondary)">✕</button>
+      </div>
       <div class="font-size-control" style="display:flex; gap:8px; padding: 0 6px 8px;">
         <button class="size-btn" data-size="small">小</button>
         <button class="size-btn" data-size="medium">中</button>
         <button class="size-btn" data-size="large">大</button>
         <button class="size-btn" data-size="xlarge">特大</button>
+      </div>
+      <div class="font-family-control" style="display:flex; gap:8px; padding: 0 6px 2px; flex-wrap: wrap;">
+        <button class="font-family-btn" data-font="system">系统</button>
+        <button class="font-family-btn" data-font="serif">宋体</button>
+        <button class="font-family-btn" data-font="kaiti">楷体</button>
+        <button class="font-family-btn" data-font="heiti">黑体</button>
       </div>
     </div>
   </div>
@@ -177,6 +186,13 @@ $deviceClass = is_mobile_device() ? 'device-mobile' : 'device-desktop';
       <div style="font-size:14px; color:var(--text-secondary); margin-bottom:8px;">书签</div>
       <ul id="bookmarks-list" style="list-style:none; padding:0; margin:0; display:grid; gap:10px;"></ul>
     </div>
+  </div>
+
+  <!-- 文本选择工具栏 -->
+  <div id="selection-toolbar" class="selection-toolbar" aria-hidden="true">
+    <button class="toolbar-btn" data-copy>复制</button>
+    <button class="toolbar-btn" data-note>笔记</button>
+    <button class="toolbar-btn" data-cancel>取消</button>
   </div>
 
   <!-- 亮度遮罩 -->

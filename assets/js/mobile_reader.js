@@ -22,6 +22,8 @@
   const bookmarksPanel = $('#bookmarks-panel');
 
   const brightnessOverlay = $('#brightness-overlay');
+  const selectionToolbar = $('#selection-toolbar');
+  const closeSettingsBtn = $('#close-settings');
 
   // Footer buttons
   const btnTOC = $('[data-action="toc"]');
@@ -91,26 +93,52 @@
     const size = btn.dataset.size;
     const map = { small: 16, medium: 18, large: 20, xlarge: 22 };
     settings.fontSize = map[size] || 18; applySettings(settings); saveSettings(settings); reflow();
+    updateFontSizeActiveUI();
   }));
+
+  $$('#settings-panel .font-family-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+    const font = btn.dataset.font || 'system';
+    settings.fontFamily = font; applySettings(settings); saveSettings(settings);
+    updateFontFamilyActiveUI();
+  }));
+
+  if (closeSettingsBtn){ closeSettingsBtn.addEventListener('click', ()=>{ settingsPanel?.classList.remove('show'); }); }
+
+  function fontFamilyMap(key){
+    const map = {
+      system: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
+      serif: "Georgia, 'Times New Roman', STSong, 'Songti SC', serif",
+      kaiti: "'KaiTi', 'Kaiti SC', STKaiti, serif",
+      heiti: "'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', Arial, sans-serif",
+      sans: "Arial, 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
+      mono: "Monaco, 'Courier New', monospace"
+    };
+    return map[key] || map.system;
+  }
 
   function applySettings(s){
     document.documentElement.style.setProperty('--reader-font-size', (s.fontSize||18)+'px');
     document.documentElement.style.setProperty('--reader-line-height', String(s.lineHeight||1.65));
     document.documentElement.style.setProperty('--para-space', String(s.paraSpace||0.9)+'em');
+    // font family
+    document.documentElement.style.setProperty('--reader-font-family', fontFamilyMap(s.fontFamily||'system'));
     if (typeof s.brightness === 'number' && brightnessOverlay){ brightnessOverlay.style.opacity = String(1 - Math.max(0, Math.min(1, s.brightness))); }
   }
 
+  function updateFontSizeActiveUI(){ const map = {16:'small',18:'medium',20:'large',22:'xlarge'}; const key = map[String(settings.fontSize)] || null; $$('#settings-panel .size-btn').forEach(b=> b.classList.toggle('active', b.dataset.size === key)); }
+  function updateFontFamilyActiveUI(){ $$('#settings-panel .font-family-btn').forEach(b=> b.classList.toggle('active', (b.dataset.font||'system') === (settings.fontFamily||'system'))); }
+
   // Panel toggles
-  function closeAllPanels(){ drawer?.classList.remove('show'); settingsPanel?.classList.remove('show'); themePanel?.classList.remove('show'); progressPanel?.classList.remove('show'); bookmarksPanel?.classList.remove('show'); }
+  function closeAllPanels(){ drawer?.classList.remove('show'); settingsPanel?.classList.remove('show'); themePanel?.classList.remove('show'); progressPanel?.classList.remove('show'); bookmarksPanel?.classList.remove('show'); hideSelectionToolbar(); }
   function showControls(temp=true){ document.body.classList.add('controls-visible'); if (temp){ clearTimeout(showControls._t); showControls._t=setTimeout(()=>document.body.classList.remove('controls-visible'),2600); } }
   function toggleControls(){ if (document.body.classList.contains('controls-visible')) document.body.classList.remove('controls-visible'); else showControls(); }
 
   // Footer actions
   if (btnTOC) btnTOC.addEventListener('click', ()=>{ closeAllPanels(); drawer?.classList.add('show'); showControls(false); });
-  if (btnFont) btnFont.addEventListener('click', ()=>{ closeAllPanels(); settingsPanel?.classList.add('show'); showControls(false); });
+  if (btnFont) btnFont.addEventListener('click', ()=>{ closeAllPanels(); settingsPanel?.classList.add('show'); showControls(false); updateFontSizeActiveUI(); updateFontFamilyActiveUI(); });
   if (btnTheme) btnTheme.addEventListener('click', ()=>{ closeAllPanels(); themePanel?.classList.add('show'); showControls(false); });
-  if (btnProgress) btnProgress.addEventListener('click', ()=>{ closeAllPanels(); progressPanel?.classList.add('show'); showControls(false); updateStats(); });
-  if (btnBookmark) btnBookmark.addEventListener('click', ()=>{ addBookmark(); loadBookmarks(); closeAllPanels(); bookmarksPanel?.classList.add('show'); showControls(false); });
+  if (btnProgress) btnProgress.addEventListener('click', ()=>{ closeAllPanels(); progressPanel?.classList.add('show'); showControls(false); updateStats(); updateControlsUI(); });
+  if (btnBookmark) btnBookmark.addEventListener('click', ()=>{ toggleBookmark(); });
 
   // Gesture
   let width = 0; let height = 0;
@@ -123,6 +151,7 @@
     totalPages = Math.max(1, Math.ceil(pageBody.scrollWidth / width));
     goToPage(Math.min(currentPage, totalPages-1), false);
     updateProgressUI();
+    updateControlsUI();
   }
 
   function updateProgressUI(){ if (progressText) progressText.textContent = Math.round(((currentPage+1)/totalPages)*100) + '%'; }
@@ -132,15 +161,16 @@
     pageBody.style.transform = `translate3d(${x}px, 0, 0)`;
   }
 
-  function goToPage(p, animate=true){ p = Math.max(0, Math.min(p, totalPages-1)); currentPage = p; const target = -p * width; setTransform(target, animate); updateProgressUI(); debounceSaveProgress(); updateStats(); }
+  function goToPage(p, animate=true){ p = Math.max(0, Math.min(p, totalPages-1)); currentPage = p; const target = -p * width; setTransform(target, animate); updateProgressUI(); debounceSaveProgress(); updateStats(); updateControlsUI(); }
   function nextPage(){ if (currentPage < totalPages-1){ goToPage(currentPage+1); } else if (nextUrl) { window.location.assign(nextUrl); } }
   function prevPage(){ if (currentPage > 0){ goToPage(currentPage-1); } else if (prevUrl) { window.location.assign(prevUrl); } }
 
   // Hook gesture library
+  let suppressTapUntil = 0;
   const gesture = new window.ReadingGesture(contentArea, {
     onSwipeLeft: ()=> nextPage(),
     onSwipeRight: ()=> prevPage(),
-    onTapCenter: ()=> toggleControls(),
+    onTapCenter: ()=> { if (Date.now() < suppressTapUntil) return; toggleControls(); },
     onDrag: (dx, info)=>{
       if (!width) return;
       if (info && info.phase === 'move'){
@@ -153,6 +183,26 @@
       }
     },
   });
+
+  // Double tap to toggle controls
+  let lastTapAt = 0; let lastTapX = 0; let lastTapY = 0;
+  contentArea.addEventListener('touchend', (e)=>{
+    if (!e.changedTouches || !e.changedTouches.length) return;
+    const t = e.changedTouches[0];
+    const now = Date.now();
+    const dt = now - lastTapAt;
+    const dx = Math.abs(t.clientX - lastTapX);
+    const dy = Math.abs(t.clientY - lastTapY);
+    // consider as double tap if within 300ms and within 20px
+    if (dt > 0 && dt < 300 && dx < 20 && dy < 20){
+      suppressTapUntil = Date.now() + 400;
+      toggleControls();
+      e.preventDefault();
+      lastTapAt = 0; lastTapX = 0; lastTapY = 0;
+      return;
+    }
+    lastTapAt = now; lastTapX = t.clientX; lastTapY = t.clientY;
+  }, {passive:false});
 
   // Stats
   const stats = { startedAt: Date.now(), pagesTurned: 0, lastFlipAt: Date.now(), wpm: 0 };
@@ -186,8 +236,25 @@
   const debounceSaveProgress = debounce(saveProgress, 400);
 
   // Bookmarks
-  function addBookmark(){ fetch(`/reading.php?action=add_bookmark&novel_id=${novelId}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chapter_id: chapterId, page: currentPage, note: '' }) }).catch(()=>{}); }
-  function loadBookmarks(){ fetch(`/reading.php?action=list_bookmarks&novel_id=${novelId}`).then(r=>r.json()).then(data=>{ const list=$('#bookmarks-list'); if (!list) return; list.innerHTML=''; const items=(data&&data.bookmarks)||[]; if (!items.length){ list.innerHTML='<li class="empty">暂无书签</li>'; return; } items.sort((a,b)=> new Date(b.created_at)-new Date(a.created_at)); items.forEach(b=>{ const li=document.createElement('li'); li.className='bookmark-item'; li.innerHTML=`<div class="row"><div>第${b.chapter_id}章 第${(b.page||0)+1}页</div><div class="meta">${b.created_at?new Date(b.created_at).toLocaleString():''}</div></div><div class="ops"><button data-go>跳转</button><button data-del>删除</button></div>`; li.querySelector('[data-go]').addEventListener('click', ()=>{ window.location.assign(`/mobile_reading.php?novel_id=${novelId}&chapter_id=${b.chapter_id}&page=${b.page||0}`); }); li.querySelector('[data-del]').addEventListener('click', ()=>{ fetch(`/reading.php?action=delete_bookmark&novel_id=${novelId}`, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`id=${encodeURIComponent(b.id)}`}).then(()=>loadBookmarks()); }); list.appendChild(li); }); }).catch(()=>{}); }
+  function addBookmark(noteText){ return fetch(`/reading.php?action=add_bookmark&novel_id=${novelId}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chapter_id: chapterId, page: currentPage, note: noteText || '' }) }).catch(()=>{}); }
+  async function toggleBookmark(){
+    try{
+      const res = await fetch(`/reading.php?action=list_bookmarks&novel_id=${novelId}`);
+      const data = await res.json();
+      const items = (data && data.bookmarks) || [];
+      const existing = items.find(b=> Number(b.chapter_id)===chapterId && Number(b.page||0)===currentPage);
+      if (existing){
+        await fetch(`/reading.php?action=delete_bookmark&novel_id=${novelId}`, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`id=${encodeURIComponent(existing.id)}` });
+      } else {
+        await addBookmark('');
+      }
+    }catch(e){}
+    finally{
+      loadBookmarks(); closeAllPanels(); bookmarksPanel?.classList.add('show'); showControls(false);
+    }
+  }
+  function escapeHTML(s){ return String(s||'').replace(/[&<>"']/g, (c)=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function loadBookmarks(){ fetch(`/reading.php?action=list_bookmarks&novel_id=${novelId}`).then(r=>r.json()).then(data=>{ const list=$('#bookmarks-list'); if (!list) return; list.innerHTML=''; const items=(data&&data.bookmarks)||[]; if (!items.length){ list.innerHTML='<li class="empty">暂无书签</li>'; return; } items.sort((a,b)=> new Date(b.created_at)-new Date(a.created_at)); items.forEach(b=>{ const li=document.createElement('li'); li.className='bookmark-item'; const note = b.note ? `<div class="note" style="color:var(--text-secondary); font-size:12px; margin-top:4px;">${escapeHTML(b.note)}</div>` : ''; li.innerHTML=`<div class="row"><div>第${b.chapter_id}章 第${(b.page||0)+1}页</div><div class="meta">${b.created_at?new Date(b.created_at).toLocaleString():''}</div></div>${note}<div class="ops" style="display:flex; gap:8px; margin-top:6px;"><button data-go>跳转</button><button data-del>删除</button></div>`; li.querySelector('[data-go]').addEventListener('click', ()=>{ window.location.assign(`/mobile_reading.php?novel_id=${novelId}&chapter_id=${b.chapter_id}&page=${b.page||0}`); }); li.querySelector('[data-del]').addEventListener('click', ()=>{ fetch(`/reading.php?action=delete_bookmark&novel_id=${novelId}`, {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:`id=${encodeURIComponent(b.id)}`}).then(()=>loadBookmarks()); }); list.appendChild(li); }); }).catch(()=>{}); }
 
   // Populate TOC in drawer
   (function initTOC(){ const toc = $('#toc'); if (!toc) return; try{ const data = JSON.parse(app.dataset.chapters||'[]'); toc.innerHTML=''; data.forEach(c=>{ const a=document.createElement('a'); a.className='toc-item'; a.textContent=c.title; a.href=`/mobile_reading.php?novel_id=${novelId}&chapter_id=${c.id}`; if (Number(c.id)===chapterId) a.classList.add('active'); toc.appendChild(a); }); }catch(e){} })();
@@ -205,6 +272,34 @@
 
   function updateControlsUI(){ if (pageSlider) { pageSlider.max=String(Math.max(0,totalPages-1)); pageSlider.value=String(currentPage); } if (speedSlider) speedSlider.value = String(settings.autoScrollSpeed||0); }
 
+  // Selection handling for copy and notes
+  function getSelectionText(){ const sel = window.getSelection(); return sel ? sel.toString() : ''; }
+  function clearSelection(){ const sel = window.getSelection(); if (!sel) return; if (sel.removeAllRanges) sel.removeAllRanges(); else if (document.selection) document.selection.empty(); }
+  function showSelectionToolbarAt(x, y){ if (!selectionToolbar) return; selectionToolbar.style.left = Math.max(8, Math.min(window.innerWidth-8, x)) + 'px'; selectionToolbar.style.top = Math.max(8, Math.min(window.innerHeight-8, y)) + 'px'; selectionToolbar.classList.add('show'); selectionToolbar.setAttribute('aria-hidden', 'false'); }
+  function showSelectionToolbar(rect){ if (!selectionToolbar) return; const x = rect.left + rect.width/2; const y = rect.top - 8; showSelectionToolbarAt(x, y); }
+  function hideSelectionToolbar(){ if (!selectionToolbar) return; selectionToolbar.classList.remove('show'); selectionToolbar.setAttribute('aria-hidden', 'true'); }
+
+  if (selectionToolbar){
+    const copyBtn = selectionToolbar.querySelector('[data-copy]');
+    const noteBtn = selectionToolbar.querySelector('[data-note]');
+    const cancelBtn = selectionToolbar.querySelector('[data-cancel]');
+    if (copyBtn) copyBtn.addEventListener('click', async ()=>{ try{ const txt = getSelectionText(); if (txt){ if (navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(txt); } else { document.execCommand && document.execCommand('copy'); } } }catch(e){} hideSelectionToolbar(); clearSelection(); showControls(true); });
+    if (noteBtn) noteBtn.addEventListener('click', async ()=>{ const txt = (getSelectionText()||'').trim(); if (!txt) { hideSelectionToolbar(); return; } try{ await addBookmark(txt.slice(0, 500)); }catch(e){} hideSelectionToolbar(); clearSelection(); loadBookmarks(); closeAllPanels(); bookmarksPanel?.classList.add('show'); showControls(false); });
+    if (cancelBtn) cancelBtn.addEventListener('click', ()=>{ hideSelectionToolbar(); clearSelection(); });
+  }
+
+  document.addEventListener('selectionchange', ()=>{
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed){ hideSelectionToolbar(); return; }
+    if (sel.rangeCount === 0){ hideSelectionToolbar(); return; }
+    const range = sel.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const el = container.nodeType === 1 ? container : container.parentNode;
+    if (!pageBody.contains(el)){ hideSelectionToolbar(); return; }
+    const rect = range.getBoundingClientRect();
+    if (rect && rect.width && rect.height){ showSelectionToolbar(rect); }
+  });
+
   // Safe viewport height unit
   function setVH(){ const vh = window.innerHeight * 0.01; document.documentElement.style.setProperty('--vh', `${vh}px`); }
   setVH(); window.addEventListener('resize', ()=>{ setVH(); reflow(); }, {passive:true});
@@ -214,6 +309,8 @@
   reflow();
   goToPage(currentPage, false);
   showControls(true);
+  updateFontSizeActiveUI();
+  updateFontFamilyActiveUI();
 
   // Accessibility: keyboard
   document.addEventListener('keydown', (e)=>{ if (e.key==='ArrowRight' || e.key==='PageDown' || e.key===' '){ e.preventDefault(); nextPage(); } if (e.key==='ArrowLeft' || e.key==='PageUp'){ e.preventDefault(); prevPage(); } if (e.key==='Escape'){ e.preventDefault(); toggleControls(); } });

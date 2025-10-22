@@ -134,7 +134,7 @@ html, body { height: 100%; }
 .brightness-overlay{ position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition: opacity .2s ease; z-index: 800; }
 
 /* Tap zones */
-.tap-zones{ position: fixed; inset: 0; z-index: 900; display: grid; grid-template-columns: 30% 40% 30%; }
+.tap-zones{ position: fixed; inset: 0; z-index: 900; display: grid; grid-template-columns: 30% 40% 30%; pointer-events: none; }
 .tap-zones .zone{ height: 100%; }
 
 /* Responsive root font-size */
@@ -147,3 +147,9 @@ html, body { height: 100%; }
   .reading-header { padding-top: max(var(--safe-top), 8px); }
   .reading-footer { padding-bottom: max(8px, var(--safe-bottom)); }
 }
+
+/* Selection toolbar */
+.selection-toolbar{ position: fixed; z-index: 1400; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; padding: 6px; box-shadow: 0 12px 38px rgba(0,0,0,0.2); display: none; }
+.selection-toolbar.show{ display: flex; gap: 8px; }
+.selection-toolbar .toolbar-btn{ -webkit-appearance:none; appearance:none; background: transparent; border: 1px solid var(--border-color); color: var(--text-color); padding: 6px 10px; font-size: 14px; border-radius: 8px; }
+.selection-toolbar .toolbar-btn:active{ transform: scale(0.98); }
