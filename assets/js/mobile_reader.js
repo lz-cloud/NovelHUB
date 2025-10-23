@@ -89,14 +89,20 @@
   applyAutoTheme();
 
   // Typography controls
-  $$('#settings-panel .size-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+  $('#settings-panel .size-btn').forEach(btn=> btn.addEventListener('click', ()=>{
     const size = btn.dataset.size;
     const map = { small: 16, medium: 18, large: 20, xlarge: 22 };
     settings.fontSize = map[size] || 18; applySettings(settings); saveSettings(settings); reflow();
     updateFontSizeActiveUI();
   }));
 
-  $$('#settings-panel .font-family-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+  $('#settings-panel .line-height-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+    const lineHeight = parseFloat(btn.dataset.lineHeight || '1.65');
+    settings.lineHeight = lineHeight; applySettings(settings); saveSettings(settings); reflow();
+    updateLineHeightActiveUI();
+  }));
+
+  $('#settings-panel .font-family-btn').forEach(btn=> btn.addEventListener('click', ()=>{
     const font = btn.dataset.font || 'system';
     settings.fontFamily = font; applySettings(settings); saveSettings(settings);
     updateFontFamilyActiveUI();
@@ -125,8 +131,9 @@
     if (typeof s.brightness === 'number' && brightnessOverlay){ brightnessOverlay.style.opacity = String(1 - Math.max(0, Math.min(1, s.brightness))); }
   }
 
-  function updateFontSizeActiveUI(){ const map = {16:'small',18:'medium',20:'large',22:'xlarge'}; const key = map[String(settings.fontSize)] || null; $$('#settings-panel .size-btn').forEach(b=> b.classList.toggle('active', b.dataset.size === key)); }
-  function updateFontFamilyActiveUI(){ $$('#settings-panel .font-family-btn').forEach(b=> b.classList.toggle('active', (b.dataset.font||'system') === (settings.fontFamily||'system'))); }
+  function updateFontSizeActiveUI(){ const map = {16:'small',18:'medium',20:'large',22:'xlarge'}; const key = map[String(settings.fontSize)] || null; $('#settings-panel .size-btn').forEach(b=> b.classList.toggle('active', b.dataset.size === key)); }
+  function updateLineHeightActiveUI(){ const lh = String(settings.lineHeight || 1.65); $('#settings-panel .line-height-btn').forEach(b=> b.classList.toggle('active', String(b.dataset.lineHeight || '1.65') === lh)); }
+  function updateFontFamilyActiveUI(){ $('#settings-panel .font-family-btn').forEach(b=> b.classList.toggle('active', (b.dataset.font||'system') === (settings.fontFamily||'system'))); }
 
   // Panel toggles
   function closeAllPanels(){ drawer?.classList.remove('show'); settingsPanel?.classList.remove('show'); themePanel?.classList.remove('show'); progressPanel?.classList.remove('show'); bookmarksPanel?.classList.remove('show'); hideSelectionToolbar(); }
@@ -135,7 +142,7 @@
 
   // Footer actions
   if (btnTOC) btnTOC.addEventListener('click', ()=>{ closeAllPanels(); drawer?.classList.add('show'); showControls(false); });
-  if (btnFont) btnFont.addEventListener('click', ()=>{ closeAllPanels(); settingsPanel?.classList.add('show'); showControls(false); updateFontSizeActiveUI(); updateFontFamilyActiveUI(); });
+  if (btnFont) btnFont.addEventListener('click', ()=>{ closeAllPanels(); settingsPanel?.classList.add('show'); showControls(false); updateFontSizeActiveUI(); updateLineHeightActiveUI(); updateFontFamilyActiveUI(); });
   if (btnTheme) btnTheme.addEventListener('click', ()=>{ closeAllPanels(); themePanel?.classList.add('show'); showControls(false); });
   if (btnProgress) btnProgress.addEventListener('click', ()=>{ closeAllPanels(); progressPanel?.classList.add('show'); showControls(false); updateStats(); updateControlsUI(); });
   if (btnBookmark) btnBookmark.addEventListener('click', ()=>{ toggleBookmark(); });
@@ -350,6 +357,7 @@
   goToPage(currentPage, false);
   showControls(true);
   updateFontSizeActiveUI();
+  updateLineHeightActiveUI();
   updateFontFamilyActiveUI();
 
   // Accessibility: keyboard

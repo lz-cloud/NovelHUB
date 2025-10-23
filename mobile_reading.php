@@ -126,17 +126,32 @@ $deviceClass = is_mobile_device() ? 'device-mobile' : 'device-desktop';
         <h3 style="margin:0; font-size:14px; color:var(--text-secondary);">字体设置</h3>
         <button id="close-settings" title="关闭" style="background:none;border:none;font-size:16px;color:var(--text-secondary)">✕</button>
       </div>
-      <div class="font-size-control" style="display:flex; gap:8px; padding: 0 6px 8px;">
-        <button class="size-btn" data-size="small">小</button>
-        <button class="size-btn" data-size="medium">中</button>
-        <button class="size-btn" data-size="large">大</button>
-        <button class="size-btn" data-size="xlarge">特大</button>
+      <div style="padding: 0 6px 4px;">
+        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:6px;">字体大小</div>
+        <div class="font-size-control" style="display:flex; gap:8px;">
+          <button class="size-btn" data-size="small">小</button>
+          <button class="size-btn" data-size="medium">中</button>
+          <button class="size-btn" data-size="large">大</button>
+          <button class="size-btn" data-size="xlarge">特大</button>
+        </div>
       </div>
-      <div class="font-family-control" style="display:flex; gap:8px; padding: 0 6px 2px; flex-wrap: wrap;">
-        <button class="font-family-btn" data-font="system">系统</button>
-        <button class="font-family-btn" data-font="serif">宋体</button>
-        <button class="font-family-btn" data-font="kaiti">楷体</button>
-        <button class="font-family-btn" data-font="heiti">黑体</button>
+      <div style="padding: 0 6px 4px;">
+        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:6px;">行间距</div>
+        <div class="line-height-control" style="display:flex; gap:8px;">
+          <button class="line-height-btn" data-line-height="1.4">紧凑</button>
+          <button class="line-height-btn" data-line-height="1.65">标准</button>
+          <button class="line-height-btn" data-line-height="1.9">舒适</button>
+          <button class="line-height-btn" data-line-height="2.2">宽松</button>
+        </div>
+      </div>
+      <div style="padding: 0 6px 2px;">
+        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:6px;">字体</div>
+        <div class="font-family-control" style="display:flex; gap:8px; flex-wrap: wrap;">
+          <button class="font-family-btn" data-font="system">系统</button>
+          <button class="font-family-btn" data-font="serif">宋体</button>
+          <button class="font-family-btn" data-font="kaiti">楷体</button>
+          <button class="font-family-btn" data-font="heiti">黑体</button>
+        </div>
       </div>
     </div>
   </div>
