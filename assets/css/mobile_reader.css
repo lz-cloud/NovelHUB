@@ -64,17 +64,35 @@ html, body { height: 100%; }
 }
 
 /* Paged scroller */
-.page-wrapper { height: 100%; width: 100%; position: relative; }
+.page-wrapper { height: 100%; width: 100%; position: relative; overflow: hidden; }
 .pages { height: 100%; width: 100%; overflow: hidden; position: relative; }
 .pages-inner { height: 100%; display: flex; will-change: transform; }
 .page {
-  height: 100%; flex: 0 0 100%; overflow: hidden; padding: 8px 8px 16px; box-sizing: border-box;
+  height: 100%; 
+  flex: 0 0 100%; 
+  overflow: hidden; 
+  box-sizing: border-box;
 }
-.page-content{ height: 100%; overflow: hidden; }
+.page-content{ 
+  height: 100%; 
+  overflow: hidden; 
+  padding: 8px 8px 16px; 
+  box-sizing: border-box;
+}
 .page-scroll{ height: 100%; overflow: hidden; }
 .page-body{
-  height: 100%; overflow: hidden; font-size: var(--reader-font-size); line-height: var(--reader-line-height); font-family: var(--reader-font-family);
+  height: 100%; 
+  overflow: hidden; 
+  font-size: var(--reader-font-size); 
+  line-height: var(--reader-line-height); 
+  font-family: var(--reader-font-family);
   will-change: transform;
+  /* Enable CSS columns for horizontal pagination */
+  column-fill: auto;
+  column-gap: 0;
+  writing-mode: horizontal-tb;
+  direction: ltr;
+  box-sizing: border-box;
 }
 .page-body h2{ margin: 0 0 .75rem; font-size: 1.1rem; }
 .page-body p{ margin: 0 0 var(--para-space) 0; text-align: justify; }
