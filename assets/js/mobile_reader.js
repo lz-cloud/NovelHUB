@@ -143,12 +143,36 @@
   // Gesture
   let width = 0; let height = 0;
   function reflow(){
-    width = contentArea.clientWidth; height = contentArea.clientHeight;
+    // Get dimensions from the page-content container which has the padding
+    const pageContent = pageBody.closest('.page-content');
+    if (!pageContent) return;
+    
+    // The actual available width and height for content (inside padding)
+    const rect = pageContent.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(pageContent);
+    const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+    const paddingRight = parseFloat(computedStyle.paddingRight) || 0;
+    const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+    const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+    
+    width = rect.width - paddingLeft - paddingRight;
+    height = rect.height - paddingTop - paddingBottom;
+    
+    // Set up CSS columns for horizontal pagination
     pageBody.style.height = height + 'px';
+    pageBody.style.width = width + 'px';
     pageBody.style.columnWidth = width + 'px';
-    pageBody.style.columnGap = '0px';
-    // compute total pages by measuring scroll width of the columns container
-    totalPages = Math.max(1, Math.ceil(pageBody.scrollWidth / width));
+    pageBody.style.columnGap = '0';
+    pageBody.style.columnFill = 'auto';
+    
+    // Force a reflow to compute column layout
+    pageBody.offsetHeight;
+    
+    // Compute total pages by measuring scroll width of the columns container
+    // Each column is exactly 'width' pixels wide
+    const scrollWidth = pageBody.scrollWidth;
+    totalPages = Math.max(1, Math.round(scrollWidth / width));
+    
     goToPage(Math.min(currentPage, totalPages-1), false);
     updateProgressUI();
     updateControlsUI();
