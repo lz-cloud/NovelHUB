@@ -141,7 +141,7 @@
   if (btnBookmark) btnBookmark.addEventListener('click', ()=>{ toggleBookmark(); });
 
   // Gesture
-  let width = 0; let height = 0;
+  let width = 0; let height = 0; let contentWidth = 0; let currentOffset = 0;
   function reflow(){
     // Get dimensions from the page-content container which has the padding
     const pageContent = pageBody.closest('.page-content');
@@ -157,21 +157,26 @@
     
     width = rect.width - paddingLeft - paddingRight;
     height = rect.height - paddingTop - paddingBottom;
+    if (width <= 0 || height <= 0) return;
     
     // Set up CSS columns for horizontal pagination
     pageBody.style.height = height + 'px';
-    pageBody.style.width = width + 'px';
+    pageBody.style.maxWidth = 'none';
+    pageBody.style.width = 'auto';
     pageBody.style.columnWidth = width + 'px';
     pageBody.style.columnGap = '0';
     pageBody.style.columnFill = 'auto';
     
     // Force a reflow to compute column layout
-    pageBody.offsetHeight;
+    void pageBody.offsetHeight;
     
     // Compute total pages by measuring scroll width of the columns container
     // Each column is exactly 'width' pixels wide
-    const scrollWidth = pageBody.scrollWidth;
-    totalPages = Math.max(1, Math.round(scrollWidth / width));
+    contentWidth = Math.max(width, pageBody.scrollWidth);
+    totalPages = Math.max(1, Math.ceil(contentWidth / width));
+    
+    // Now set explicit width for proper transform behavior
+    pageBody.style.width = contentWidth + 'px';
     
     goToPage(Math.min(currentPage, totalPages-1), false);
     updateProgressUI();
@@ -185,7 +190,18 @@
     pageBody.style.transform = `translate3d(${x}px, 0, 0)`;
   }
 
-  function goToPage(p, animate=true){ p = Math.max(0, Math.min(p, totalPages-1)); currentPage = p; const target = -p * width; setTransform(target, animate); updateProgressUI(); debounceSaveProgress(); updateStats(); updateControlsUI(); }
+  function goToPage(p, animate=true){
+    if (width <= 0) return;
+    p = Math.max(0, Math.min(p, totalPages-1));
+    currentPage = p;
+    const maxOffset = Math.max(0, contentWidth - width);
+    currentOffset = Math.min(p * width, maxOffset);
+    setTransform(-currentOffset, animate);
+    updateProgressUI();
+    debounceSaveProgress();
+    updateStats();
+    updateControlsUI();
+  }
   function nextPage(){ if (currentPage < totalPages-1){ goToPage(currentPage+1); } else if (nextUrl) { window.location.assign(nextUrl); } }
   function prevPage(){ if (currentPage > 0){ goToPage(currentPage-1); } else if (prevUrl) { window.location.assign(prevUrl); } }
 
@@ -198,12 +214,12 @@
     onDrag: (dx, info)=>{
       if (!width) return;
       if (info && info.phase === 'move'){
-        const base = -currentPage * width;
+        const base = -currentOffset;
         const offset = dx; // follow finger
         setTransform(base + offset, false);
       } else if (info && (info.phase === 'cancel' || info.phase==='end')){
         // snap back
-        const base = -currentPage * width; setTransform(base, true);
+        setTransform(-currentOffset, true);
       }
     },
   });
