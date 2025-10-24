@@ -19,6 +19,10 @@ define('BOOKSHELVES_FILE', DATA_DIR . '/user_bookshelves.json');
 // Reading-related files
 define('READING_PROGRESS_FILE', DATA_DIR . '/reading_progress.json');
 define('BOOKMARKS_FILE', DATA_DIR . '/bookmarks.json');
+// Download & membership files
+define('DOWNLOADS_FILE', DATA_DIR . '/downloads.json');
+define('PLUS_MEMBERSHIPS_FILE', DATA_DIR . '/plus_memberships.json');
+define('REDEMPTION_CODES_FILE', DATA_DIR . '/redemption_codes.json');
 
 // General settings
 ini_set('session.cookie_httponly', '1');
@@ -45,6 +49,9 @@ $ensureFiles = [
     BOOKSHELVES_FILE => '[]',
     READING_PROGRESS_FILE => '[]',
     BOOKMARKS_FILE => '[]',
+    DOWNLOADS_FILE => '[]',
+    PLUS_MEMBERSHIPS_FILE => '[]',
+    REDEMPTION_CODES_FILE => '[]',
 ];
 foreach ($ensureFiles as $file => $defaultContent) {
     if (!file_exists($file)) {

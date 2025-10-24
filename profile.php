@@ -10,11 +10,6 @@ $uid = (int)$user['id'];
 $tab = $_GET['tab'] ?? 'overview';
 $errors = [];
 
-// Helpers for extra user storage (per-user JSON)
-function user_extra_path(int $userId): string { return USERS_DIR . '/' . $userId . '.json'; }
-function user_extra_load(int $userId): array { $f = user_extra_path($userId); if (!file_exists($f)) return ['shelf_categories'=>['默认']]; $d = json_decode(@file_get_contents($f), true); if (!is_array($d)) $d = ['shelf_categories'=>['默认']]; if (empty($d['shelf_categories'])) $d['shelf_categories']=['默认']; return $d; }
-function user_extra_save(int $userId, array $data): bool { $f=user_extra_path($userId); @mkdir(dirname($f),0775,true); return (bool)file_put_contents($f, json_encode($data, JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT)); }
-
 $extra = user_extra_load($uid);
 
 // Profile update
@@ -121,6 +116,7 @@ foreach ($progress as $p) if ((int)($p['user_id']??0) === $uid) $progMap[(int)($
     <li class="nav-item"><a class="nav-link <?php if($tab==='bookshelf') echo 'active'; ?>" href="/profile.php?tab=bookshelf">书架</a></li>
     <li class="nav-item"><a class="nav-link <?php if($tab==='notifications') echo 'active'; ?>" href="/profile.php?tab=notifications">通知</a></li>
     <li class="nav-item"><a class="nav-link <?php if($tab==='edit') echo 'active'; ?>" href="/profile.php?tab=edit">编辑资料</a></li>
+    <li class="nav-item"><a class="nav-link" href="/plans.php">会员计划</a></li>
   </ul>
 
   <?php if ($tab==='overview'): ?>

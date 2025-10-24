@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/lib/helpers.php';
+require_once __DIR__ . '/lib/Membership.php';
 if (!function_exists('mb_strtolower')) {
     function mb_strtolower($s) { return strtolower($s); }
 }
@@ -13,6 +14,12 @@ if (!function_exists('mb_strimwidth')) {
 
 $novels = load_novels();
 $categories = json_decode(file_get_contents(CATEGORIES_FILE), true) ?: [];
+$currentUser = current_user();
+$isPlusUser = false;
+if ($currentUser) {
+    $membershipSvc = new Membership();
+    $isPlusUser = $membershipSvc->isPlusUser((int)$currentUser['id']);
+}
 
 $query = trim($_GET['q'] ?? '');
 $category = isset($_GET['category']) ? (int)$_GET['category'] : 0;
@@ -67,8 +74,12 @@ usort($novels, function($a,$b) use ($sort) {
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="/">NovelHub</a>
-    <div>
-      <?php if (current_user()): ?>
+    <div class="d-flex align-items-center gap-2">
+      <a class="btn btn-sm btn-outline-info" href="/plans.php">会员计划</a>
+      <?php if ($currentUser): ?>
+        <?php if ($isPlusUser): ?>
+          <span class="badge text-bg-warning text-dark">PLUS</span>
+        <?php endif; ?>
         <a class="btn btn-sm btn-outline-light" href="/dashboard.php">仪表盘</a>
         <a class="btn btn-sm btn-outline-light" href="/logout.php">退出</a>
       <?php else: ?>
