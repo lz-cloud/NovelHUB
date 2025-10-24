@@ -122,6 +122,9 @@ $hotInCategory = array_slice($hotInCategory, 0, 6);
           <button class="btn btn-secondary" disabled>尚无可读章节</button>
         <?php endif; ?>
         <a class="btn btn-outline-primary" href="/shelf.php?action=add&novel_id=<?php echo (int)$novel_id; ?>">加入书架</a>
+        <?php if (current_user() && ((int)$novel['author_id'] === (int)current_user()['id'] || is_admin())): ?>
+          <a class="btn btn-outline-success" href="/edit_novel.php?novel_id=<?php echo (int)$novel_id; ?>">编辑书籍信息</a>
+        <?php endif; ?>
       </div>
       <div class="card mt-3">
         <div class="card-body">
