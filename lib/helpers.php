@@ -91,6 +91,34 @@ function update_user_session(int $userId)
     }
 }
 
+function user_extra_path(int $userId): string
+{
+    return USERS_DIR . '/' . $userId . '.json';
+}
+
+function user_extra_load(int $userId): array
+{
+    $path = user_extra_path($userId);
+    if (!file_exists($path)) {
+        return ['shelf_categories' => ['默认']];
+    }
+    $data = json_decode(@file_get_contents($path), true);
+    if (!is_array($data)) {
+        $data = [];
+    }
+    if (empty($data['shelf_categories']) || !is_array($data['shelf_categories'])) {
+        $data['shelf_categories'] = ['默认'];
+    }
+    return $data;
+}
+
+function user_extra_save(int $userId, array $data): bool
+{
+    $path = user_extra_path($userId);
+    @mkdir(dirname($path), 0775, true);
+    return (bool)file_put_contents($path, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+}
+
 function ensure_novel_dir(int $novelId)
 {
     $dir = CHAPTERS_DIR . '/novel_' . $novelId;

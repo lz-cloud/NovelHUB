@@ -4,6 +4,9 @@ require_once __DIR__ . '/lib/Statistics.php';
 require_once __DIR__ . '/lib/Review.php';
 require_once __DIR__ . '/lib/Export.php';
 require_once __DIR__ . '/lib/Notifier.php';
+require_once __DIR__ . '/lib/Membership.php';
+
+global $dm;
 
 $novel_id = (int)($_GET['novel_id'] ?? 0);
 $action = $_GET['action'] ?? '';
@@ -14,15 +17,36 @@ $stats = new Statistics();
 $reviewSvc = new ReviewService();
 $exporter = new Exporter();
 $notifier = new Notifier();
+$downloadMgr = new DownloadManager();
 
 // Handle downloads
 if ($action === 'download') {
+    require_login();
+    $user = current_user();
+    $userId = (int)$user['id'];
+    
+    // Check download permission
+    $downloadCheck = $downloadMgr->canDownload($userId);
+    if (!$downloadCheck['allowed']) {
+        http_response_code(403);
+        echo '<!doctype html><html><head><meta charset="utf-8"><title>下载限制</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"></head><body>';
+        echo '<div class="container py-5"><div class="alert alert-warning">';
+        echo '<h4 class="alert-heading">下载次数已达上限</h4>';
+        echo '<p>你今天的下载次数已达到上限（' . ($downloadCheck['limit'] ?? 3) . '次）。</p>';
+        echo '<hr><p class="mb-0">升级为 Plus 会员即可享受无限下载！<a href="/plans.php" class="alert-link">立即查看会员计划</a></p>';
+        echo '</div><a href="/novel_detail.php?novel_id=' . $novel_id . '" class="btn btn-primary">返回作品详情</a></div></body></html>';
+        exit;
+    }
+    
     $format = strtolower(trim($_GET['format'] ?? ''));
     $file = null;
     if ($format === 'txt') $file = $exporter->exportTXT($novel_id);
     if ($format === 'epub') $file = $exporter->exportEPUB($novel_id);
     if ($format === 'pdf') $file = $exporter->exportPDF($novel_id);
     if ($file && file_exists($file)) {
+        // Record download
+        $downloadMgr->recordDownload($userId, $novel_id, $format);
+        
         header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="'.basename($file).'"');
@@ -125,7 +149,20 @@ $hotInCategory = array_slice($hotInCategory, 0, 6);
       </div>
       <div class="card mt-3">
         <div class="card-body">
-          <h6>下载选项</h6>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">下载选项</h6>
+            <a class="btn btn-sm btn-outline-primary" href="/plans.php">会员计划</a>
+          </div>
+          <?php if (!current_user()): ?>
+            <div class="alert alert-light border small text-muted mb-3">登录后可下载并记录次数。升级 Plus 会员可享无限下载。</div>
+          <?php else: ?>
+            <?php $viewer = current_user(); $membershipSvc = new Membership(); $isPlusViewer = $membershipSvc->isPlusUser((int)$viewer['id']); ?>
+            <?php if ($isPlusViewer): $viewerMembership = $membershipSvc->getUserMembership((int)$viewer['id']); ?>
+              <div class="alert alert-success small mb-3">Plus 会员 · 无限下载<?php if ($viewerMembership) echo ' · 到期：' . e(date('Y-m-d H:i', strtotime($viewerMembership['expires_at']))); ?></div>
+            <?php else: $downloadStatus = $downloadMgr->canDownload((int)$viewer['id']); ?>
+              <div class="alert alert-light border small text-muted mb-3">今日已下载 <?php echo (int)($downloadStatus['count'] ?? 0); ?> / <?php echo (int)($downloadStatus['limit'] ?? DownloadManager::DAILY_LIMIT); ?> 次。升级 Plus 即享无限下载。</div>
+            <?php endif; ?>
+          <?php endif; ?>
           <div class="btn-group">
             <a class="btn btn-sm btn-outline-secondary" href="/novel_detail.php?action=download&format=txt&novel_id=<?php echo (int)$novel_id; ?>">TXT</a>
             <a class="btn btn-sm btn-outline-secondary" href="/novel_detail.php?action=download&format=epub&novel_id=<?php echo (int)$novel_id; ?>">EPUB</a>
@@ -154,6 +191,27 @@ $hotInCategory = array_slice($hotInCategory, 0, 6);
           <div class="card-text"><?php echo nl2br(e($novel['description'] ?? '暂无简介')); ?></div>
         </div>
       </div>
+      <?php 
+        $author = $dm->findById(USERS_FILE, (int)$novel['author_id']);
+        $authorBio = $author['profile']['bio'] ?? '';
+        if ($authorBio):
+      ?>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">关于作者</h5>
+          <div class="d-flex align-items-start mb-2">
+            <?php if (!empty($author['profile']['avatar'])): ?>
+              <img src="/uploads/avatars/<?php echo e($author['profile']['avatar']); ?>" class="rounded-circle me-3" style="width:48px;height:48px;object-fit:cover;">
+            <?php endif; ?>
+            <div>
+              <div class="fw-bold"><?php echo e(get_user_display_name((int)$novel['author_id'])); ?></div>
+              <div class="text-muted small">作者</div>
+            </div>
+          </div>
+          <div class="card-text"><?php echo nl2br(e($authorBio)); ?></div>
+        </div>
+      </div>
+      <?php endif; ?>
       <div class="row g-3">
         <div class="col-12 col-lg-7">
           <div class="card mb-3" id="chapters">
