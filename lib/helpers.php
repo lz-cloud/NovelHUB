@@ -159,6 +159,37 @@ function next_chapter_id(int $novelId): int
     return $max + 1;
 }
 
+function delete_novel(int $novelId): bool
+{
+    global $dm;
+    
+    // First delete the novel from the JSON file
+    if (!$dm->deleteById(NOVELS_FILE, $novelId)) {
+        return false;
+    }
+    
+    // Delete all chapters directory
+    $chaptersDir = CHAPTERS_DIR . '/novel_' . $novelId;
+    if (is_dir($chaptersDir)) {
+        // Delete all chapter files
+        $files = glob($chaptersDir . '/*.json');
+        foreach ($files as $file) {
+            @unlink($file);
+        }
+        // Remove the directory
+        @rmdir($chaptersDir);
+    }
+    
+    // Remove from bookshelves
+    $bookshelves = $dm->readJson(BOOKSHELVES_FILE, []);
+    $bookshelves = array_values(array_filter($bookshelves, function($item) use ($novelId) {
+        return (int)($item['novel_id'] ?? 0) !== $novelId;
+    }));
+    $dm->writeJson(BOOKSHELVES_FILE, $bookshelves);
+    
+    return true;
+}
+
 function handle_upload(array $file, string $targetDir): ?string
 {
     if (!isset($file['tmp_name']) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) return null;

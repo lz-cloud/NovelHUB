@@ -38,7 +38,7 @@ if ($tab==='system' && $action==='save_settings') {
 if ($tab==='content' && $action) {
     $ids = array_map('intval', $_POST['ids'] ?? []);
     if ($action === 'batch_delete') {
-        foreach ($ids as $id) { $dm->deleteById(NOVELS_FILE, $id); $dir = CHAPTERS_DIR.'/novel_'.$id; if (is_dir($dir)) { foreach (glob($dir.'/*.json') as $f) @unlink($f); @rmdir($dir); } }
+        foreach ($ids as $id) { delete_novel($id); }
         $logger->log('batch_delete_novels', ['count'=>count($ids)]);
     }
     if ($action === 'batch_set_category') {
@@ -205,7 +205,13 @@ $overview = $statsSvc->computePlatformOverview();
               <strong><?php echo e($n['title']); ?></strong>
               <span class="text-muted ms-2">作者：<?php echo e(get_user_display_name((int)$n['author_id'])); ?></span>
             </div>
-            <small class="text-muted">创建：<?php echo e($n['created_at']); ?></small>
+            <div class="d-flex align-items-center gap-2">
+              <small class="text-muted">创建：<?php echo e($n['created_at']); ?></small>
+              <div class="btn-group btn-group-sm">
+                <a class="btn btn-outline-primary" href="/novel_detail.php?novel_id=<?php echo (int)$n['id']; ?>">查看</a>
+                <a class="btn btn-outline-success" href="/edit_novel.php?novel_id=<?php echo (int)$n['id']; ?>">编辑</a>
+              </div>
+            </div>
           </label>
         <?php endforeach; if (!$list) echo '<div class="text-muted p-3">无结果</div>'; ?>
       </div>

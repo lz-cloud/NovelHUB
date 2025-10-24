@@ -37,6 +37,10 @@ $myNovels = array_values(array_filter(load_novels(), function($n) use ($user){ r
     <div class="alert alert-info">你还没有作品，点击“创建新小说”开始创作吧。</div>
   <?php endif; ?>
 
+  <?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
+    <div class="alert alert-success">小说已成功删除</div>
+  <?php endif; ?>
+
   <?php foreach ($myNovels as $n): ?>
     <?php $chapters = list_chapters((int)$n['id']); ?>
     <div class="card mb-4">
@@ -48,7 +52,11 @@ $myNovels = array_values(array_filter(load_novels(), function($n) use ($user){ r
           <div class="flex-grow-1">
             <h4 class="mb-1"><?php echo e($n['title']); ?></h4>
             <div class="text-muted mb-2">创建时间：<?php echo e($n['created_at']); ?>，最近更新：<?php echo e($n['updated_at']); ?></div>
-            <a class="btn btn-sm btn-success" href="/publish_chapter.php?novel_id=<?php echo (int)$n['id']; ?>">+ 发布新章节</a>
+            <div class="btn-group mb-2">
+              <a class="btn btn-sm btn-success" href="/publish_chapter.php?novel_id=<?php echo (int)$n['id']; ?>">+ 发布新章节</a>
+              <a class="btn btn-sm btn-primary" href="/edit_novel.php?novel_id=<?php echo (int)$n['id']; ?>">编辑书籍信息</a>
+              <a class="btn btn-sm btn-info" href="/novel_detail.php?novel_id=<?php echo (int)$n['id']; ?>">查看详情</a>
+            </div>
           </div>
         </div>
         <hr>

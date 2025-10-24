@@ -22,14 +22,7 @@ if ($tab === 'novels' && $action) {
     $novelId = (int)($_POST['novel_id'] ?? $_GET['novel_id'] ?? 0);
     if ($novelId) {
         if ($action === 'delete') {
-            // delete novel entry
-            $dm->deleteById(NOVELS_FILE, $novelId);
-            // delete chapters files
-            $dir = CHAPTERS_DIR . '/novel_' . $novelId;
-            if (is_dir($dir)) {
-                foreach (glob($dir . '/*.json') as $f) @unlink($f);
-                @rmdir($dir);
-            }
+            delete_novel($novelId);
         }
         header('Location: /admin.php?tab=novels'); exit;
     }
@@ -112,8 +105,10 @@ $categories = $dm->readJson(CATEGORIES_FILE, []);
             <strong><?php echo e($n['title']); ?></strong>
             <span class="text-muted ms-2">作者：<?php echo e(get_user_display_name((int)$n['author_id'])); ?></span>
           </div>
-          <div>
-            <a class="btn btn-sm btn-outline-danger" href="/admin.php?tab=novels&action=delete&novel_id=<?php echo (int)$n['id']; ?>" onclick="return confirm('确认删除该小说及所有章节？');">删除</a>
+          <div class="btn-group btn-group-sm">
+            <a class="btn btn-outline-primary" href="/novel_detail.php?novel_id=<?php echo (int)$n['id']; ?>">查看</a>
+            <a class="btn btn-outline-success" href="/edit_novel.php?novel_id=<?php echo (int)$n['id']; ?>">编辑</a>
+            <a class="btn btn-outline-danger" href="/admin.php?tab=novels&action=delete&novel_id=<?php echo (int)$n['id']; ?>" onclick="return confirm('确认删除该小说及所有章节？');">删除</a>
           </div>
         </div>
       <?php endforeach; ?>
