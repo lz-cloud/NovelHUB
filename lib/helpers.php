@@ -58,6 +58,57 @@ function e($str)
     return htmlspecialchars((string)$str, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+function validate_required($value, $fieldName = 'Field'): ?string
+{
+    if (empty(trim($value))) {
+        return "{$fieldName} is required";
+    }
+    return null;
+}
+
+function validate_email($email): ?string
+{
+    if (empty(trim($email))) {
+        return "Email is required";
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return "Invalid email format";
+    }
+    return null;
+}
+
+function validate_length($value, $min, $max, $fieldName = 'Field'): ?string
+{
+    $len = mb_strlen($value);
+    if ($len < $min) {
+        return "{$fieldName} must be at least {$min} characters";
+    }
+    if ($len > $max) {
+        return "{$fieldName} must not exceed {$max} characters";
+    }
+    return null;
+}
+
+function validate_numeric($value, $fieldName = 'Field'): ?string
+{
+    if (!is_numeric($value)) {
+        return "{$fieldName} must be a number";
+    }
+    return null;
+}
+
+function validate_range($value, $min, $max, $fieldName = 'Field'): ?string
+{
+    if (!is_numeric($value)) {
+        return "{$fieldName} must be a number";
+    }
+    $num = (float)$value;
+    if ($num < $min || $num > $max) {
+        return "{$fieldName} must be between {$min} and {$max}";
+    }
+    return null;
+}
+
 function load_users(): array
 {
     global $dm;

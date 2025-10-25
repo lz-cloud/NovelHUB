@@ -34,22 +34,28 @@ class DataManager
     public function readJson(string $file, $default = [])
     {
         $this->ensureFile($file, $default);
-        $fp = fopen($file, 'r');
+        $fp = @fopen($file, 'r');
         if (!$fp) {
+            error_log("DataManager: Failed to open file for reading: {$file}");
             return $default;
         }
         try {
             if (!flock($fp, LOCK_SH)) {
-                // Could not lock for reading; return default to avoid blocking
+                error_log("DataManager: Failed to acquire read lock: {$file}");
                 return $default;
             }
             $size = filesize($file);
-            if ($size === 0) {
+            if ($size === false || $size === 0) {
                 return $default;
             }
             $raw = fread($fp, $size);
+            if ($raw === false) {
+                error_log("DataManager: Failed to read file: {$file}");
+                return $default;
+            }
             $data = json_decode($raw, true);
             if ($data === null && json_last_error() !== JSON_ERROR_NONE) {
+                error_log("DataManager: JSON decode error in {$file}: " . json_last_error_msg());
                 return $default;
             }
             return $data;
@@ -76,21 +82,34 @@ class DataManager
             @chmod($dir, 0775);
             if (!is_writable($dir)) @chmod($dir, 0777);
         }
-        $fp = fopen($tmp, 'c+');
-        if (!$fp) return false;
+        $fp = @fopen($tmp, 'c+');
+        if (!$fp) {
+            error_log("DataManager: Failed to open temp file for writing: {$tmp}");
+            return false;
+        }
         try {
-            if (!flock($fp, LOCK_EX)) return false;
-            ftruncate($fp, 0);
-            fwrite($fp, $json);
+            if (!flock($fp, LOCK_EX)) {
+                error_log("DataManager: Failed to acquire write lock: {$file}");
+                return false;
+            }
+            if (!ftruncate($fp, 0)) {
+                error_log("DataManager: Failed to truncate temp file: {$tmp}");
+                return false;
+            }
+            if (fwrite($fp, $json) === false) {
+                error_log("DataManager: Failed to write JSON to temp file: {$tmp}");
+                return false;
+            }
             fflush($fp);
         } finally {
             flock($fp, LOCK_UN);
             fclose($fp);
         }
-        $ok = rename($tmp, $file);
+        $ok = @rename($tmp, $file);
         if ($ok) {
             @chmod($file, 0664);
         } else {
+            error_log("DataManager: Failed to rename temp file {$tmp} to {$file}");
             @unlink($tmp);
         }
         return $ok;
