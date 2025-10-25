@@ -17,7 +17,34 @@ class Membership
     public function getSettings(): array
     {
         $settings = json_decode(@file_get_contents(SYSTEM_SETTINGS_FILE), true) ?: [];
-        return $settings['membership'] ?? ['code_length' => 8, 'plan_description' => '兑换码激活 Plus 会员'];
+        $membership = $settings['membership'] ?? [];
+        if (!isset($membership['code_length'])) {
+            $membership['code_length'] = 8;
+        }
+        if (!isset($membership['plan_description'])) {
+            $membership['plan_description'] = '兑换码激活 Plus 会员';
+        }
+        if (!isset($membership['free_features']) || !is_array($membership['free_features'])) {
+            $membership['free_features'] = [
+                '无限阅读所有作品',
+                '创建和发布作品',
+                '每日下载 3 次',
+                '书架收藏功能',
+                '阅读进度同步',
+                '书签功能'
+            ];
+        }
+        if (!isset($membership['plus_features']) || !is_array($membership['plus_features'])) {
+            $membership['plus_features'] = [
+                '包含免费版所有功能',
+                '无限次数下载',
+                '支持 TXT、EPUB、PDF 格式',
+                '优先获得新功能',
+                '专属会员标识',
+                '无广告体验'
+            ];
+        }
+        return $membership;
     }
 
     /**
@@ -59,16 +86,29 @@ class Membership
      */
     public function redeemCode(int $userId, string $code): array
     {
+        if ($userId <= 0) {
+            return ['success' => false, 'error' => '无效的用户ID'];
+        }
+        
         $code = strtoupper(trim($code));
         if ($code === '') {
             return ['success' => false, 'error' => '兑换码不能为空'];
         }
+        
+        if (strlen($code) < 4 || strlen($code) > 64) {
+            return ['success' => false, 'error' => '兑换码格式无效'];
+        }
 
         $codes = $this->dm->readJson(REDEMPTION_CODES_FILE, []);
+        if (!is_array($codes)) {
+            $codes = [];
+        }
+        
         $codeRecord = null;
         $codeIndex = null;
 
         foreach ($codes as $i => $c) {
+            if (!is_array($c)) continue;
             if (strtoupper($c['code'] ?? '') === $code) {
                 $codeRecord = $c;
                 $codeIndex = $i;

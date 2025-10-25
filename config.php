@@ -128,7 +128,26 @@ foreach ($moreDirs as $d) {
 $ensureMoreFiles = [
     SYSTEM_SETTINGS_FILE => json_encode(['site_name'=>'NovelHub','logo'=>null,'description'=>'开源小说阅读与创作平台','reading'=>['default_font'=>'system','theme'=>'day'],
         'uploads'=>['max_file_size'=>5*1024*1024,'image_formats'=>['jpg','png','gif','webp']],
-        'membership'=>['code_length'=>8,'plan_description'=>'兑换码激活 Plus 会员，享受无限下载等权益'],
+        'membership'=>[
+            'code_length'=>8,
+            'plan_description'=>'兑换码激活 Plus 会员，享受无限下载等权益',
+            'free_features'=>[
+                '无限阅读所有作品',
+                '创建和发布作品',
+                '每日下载 3 次',
+                '书架收藏功能',
+                '阅读进度同步',
+                '书签功能'
+            ],
+            'plus_features'=>[
+                '包含免费版所有功能',
+                '无限次数下载',
+                '支持 TXT、EPUB、PDF 格式',
+                '优先获得新功能',
+                '专属会员标识',
+                '无广告体验'
+            ]
+        ],
         'invitation_system'=>['enabled'=>false,'code_length'=>8],
         'smtp_settings'=>[
             'enabled'=>false,

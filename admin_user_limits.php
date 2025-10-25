@@ -14,6 +14,39 @@ $message = null;
 $messageType = null;
 $action = $_POST['action'] ?? $_GET['action'] ?? null;
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'set_group_limit') {
+    $role = $_POST['role'] ?? '';
+    if ($role) {
+        $limits = [
+            'enabled' => isset($_POST['enabled']),
+            'daily_chapter_limit' => max(0, (int)($_POST['daily_chapter_limit'] ?? 0)),
+            'daily_reading_time_limit' => max(0, (int)($_POST['daily_reading_time_limit'] ?? 0)),
+            'concurrent_novels_limit' => max(0, (int)($_POST['concurrent_novels_limit'] ?? 0)),
+            'download_limit_per_day' => max(0, (int)($_POST['download_limit_per_day'] ?? 0)),
+        ];
+        
+        if ($limitsManager->setGroupLimit($role, $limits)) {
+            $logger->log('update_group_limits', ['role' => $role, 'limits' => $limits]);
+            $message = '用户组限制设置已更新';
+            $messageType = 'success';
+        } else {
+            $message = '更新失败';
+            $messageType = 'danger';
+        }
+    }
+}
+
+if ($action === 'remove_group_limit') {
+    $role = $_GET['role'] ?? '';
+    if ($role) {
+        if ($limitsManager->removeGroupLimit($role)) {
+            $logger->log('remove_group_limit', ['role' => $role]);
+            $message = '用户组限制已移除，将使用默认设置';
+            $messageType = 'success';
+        }
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'set_default_limits') {
     $limits = [
         'enabled' => isset($_POST['enabled']),
@@ -66,9 +99,15 @@ if ($action === 'remove_user_limit') {
     }
 }
 
-$defaultLimits = $limitsManager->getUserLimit(0);
+$defaultLimits = $limitsManager->getStoredDefaultLimits();
 $users = load_users();
 $userLimits = $limitsManager->getAllUserLimits();
+$groupLimits = $limitsManager->getAllGroupLimits();
+$availableRoles = [
+    'user' => '普通用户',
+    'content_admin' => '内容管理员',
+    'super_admin' => '超级管理员'
+];
 
 ?>
 <!doctype html>
@@ -145,6 +184,75 @@ $userLimits = $limitsManager->getAllUserLimits();
           </form>
         </div>
       </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">用户组限制</h5>
+          <p class="text-muted small">对指定角色的所有用户生效，自定义用户限制优先生效</p>
+          <div class="accordion" id="groupLimitAccordion">
+            <?php foreach ($availableRoles as $roleKey => $roleName): 
+              $roleLimit = $limitsManager->getGroupLimit($roleKey);
+              $panelId = 'group_' . $roleKey;
+            ?>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading_<?php echo $panelId; ?>">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_<?php echo $panelId; ?>">
+                  <?php echo $roleName; ?>
+                  <?php if (isset($groupLimits[$roleKey])): ?>
+                    <span class="badge bg-success ms-2">已设置</span>
+                  <?php else: ?>
+                    <span class="badge bg-light text-muted ms-2">使用默认</span>
+                  <?php endif; ?>
+                </button>
+              </h2>
+              <div id="collapse_<?php echo $panelId; ?>" class="accordion-collapse collapse" data-bs-parent="#groupLimitAccordion">
+                <div class="accordion-body">
+                  <form method="post" class="mb-3">
+                    <input type="hidden" name="action" value="set_group_limit">
+                    <input type="hidden" name="role" value="<?php echo $roleKey; ?>">
+                    <div class="mb-3 form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="group_enabled_<?php echo $roleKey; ?>" name="enabled" <?php if($roleLimit['enabled']) echo 'checked'; ?>>
+                      <label class="form-check-label" for="group_enabled_<?php echo $roleKey; ?>">启用限制</label>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">每日章节限制</label>
+                      <input type="number" class="form-control" name="daily_chapter_limit" value="<?php echo (int)$roleLimit['daily_chapter_limit']; ?>" min="0">
+                      <div class="form-text">0 = 无限制</div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">每日阅读时长限制（分钟）</label>
+                      <input type="number" class="form-control" name="daily_reading_time_limit" value="<?php echo (int)$roleLimit['daily_reading_time_limit']; ?>" min="0">
+                      <div class="form-text">0 = 无限制</div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">同时阅读小说数限制</label>
+                      <input type="number" class="form-control" name="concurrent_novels_limit" value="<?php echo (int)$roleLimit['concurrent_novels_limit']; ?>" min="0">
+                      <div class="form-text">0 = 无限制</div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label">每日下载次数限制</label>
+                      <input type="number" class="form-control" name="download_limit_per_day" value="<?php echo (int)$roleLimit['download_limit_per_day']; ?>" min="0">
+                      <div class="form-text">0 = 无限制</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                      <button type="submit" class="btn btn-primary">保存</button>
+                      <?php if (isset($groupLimits[$roleKey])): ?>
+                        <a href="?action=remove_group_limit&amp;role=<?php echo $roleKey; ?>" class="btn btn-outline-danger" onclick="return confirm('确定移除此用户组的限制吗？将使用默认设置');">移除用户组限制</a>
+                      <?php endif; ?>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="col-md-8">
@@ -166,7 +274,8 @@ $userLimits = $limitsManager->getAllUserLimits();
               <tbody>
                 <?php foreach ($users as $user): 
                   $userId = (int)$user['id'];
-                  $userLimit = $limitsManager->getUserLimit($userId);
+                  $userRole = $user['role'] ?? 'user';
+                  $userLimit = $limitsManager->getUserLimit($userId, $userRole);
                   $usage = $limitsManager->getUserUsage($userId);
                   $hasCustomLimit = isset($userLimits[$userId]);
                 ?>
@@ -176,6 +285,8 @@ $userLimits = $limitsManager->getAllUserLimits();
                       <?php echo e($user['username'] ?? ''); ?>
                       <?php if ($hasCustomLimit): ?>
                         <span class="badge bg-warning text-dark">自定义</span>
+                      <?php elseif (isset($groupLimits[$userRole])): ?>
+                        <span class="badge bg-info text-dark">用户组</span>
                       <?php endif; ?>
                     </td>
                     <td>

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/DataManager.php';
+require_once __DIR__ . '/Auth.php';
 
 class UserLimits
 {
@@ -17,7 +18,30 @@ class UserLimits
     private function ensureFiles(): void
     {
         if (!file_exists(self::USER_LIMITS_FILE)) {
-            file_put_contents(self::USER_LIMITS_FILE, json_encode(['default_limits' => $this->getDefaultLimits()], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            $initial = [
+                'default_limits' => $this->getDefaultLimits(),
+                'group_limits' => [],
+                'user_limits' => []
+            ];
+            file_put_contents(self::USER_LIMITS_FILE, json_encode($initial, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        } else {
+            $existing = json_decode(file_get_contents(self::USER_LIMITS_FILE), true) ?: [];
+            $updated = false;
+            if (!isset($existing['default_limits'])) {
+                $existing['default_limits'] = $this->getDefaultLimits();
+                $updated = true;
+            }
+            if (!isset($existing['group_limits']) || !is_array($existing['group_limits'])) {
+                $existing['group_limits'] = [];
+                $updated = true;
+            }
+            if (!isset($existing['user_limits']) || !is_array($existing['user_limits'])) {
+                $existing['user_limits'] = [];
+                $updated = true;
+            }
+            if ($updated) {
+                file_put_contents(self::USER_LIMITS_FILE, json_encode($existing, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+            }
         }
         if (!file_exists(self::USER_USAGE_FILE)) {
             file_put_contents(self::USER_USAGE_FILE, '[]');
@@ -35,7 +59,7 @@ class UserLimits
         ];
     }
 
-    public function getUserLimit(int $userId): array
+    public function getUserLimit(int $userId, ?string $userRole = null): array
     {
         $limitsData = json_decode(file_get_contents(self::USER_LIMITS_FILE), true) ?: [];
         
@@ -43,7 +67,74 @@ class UserLimits
             return array_merge($this->getDefaultLimits(), $limitsData['user_limits'][$userId]);
         }
         
+        if ($userRole === null) {
+            $userRole = $this->resolveUserRole($userId);
+        }
+        
+        if ($userRole && isset($limitsData['group_limits'][$userRole])) {
+            return array_merge($this->getDefaultLimits(), $limitsData['group_limits'][$userRole]);
+        }
+        
         return array_merge($this->getDefaultLimits(), $limitsData['default_limits'] ?? []);
+    }
+
+    private function resolveUserRole(int $userId): string
+    {
+        $users = $this->dm->readJson(USERS_FILE, []);
+        foreach ($users as $u) {
+            if ((int)($u['id'] ?? 0) === $userId) {
+                return $u['role'] ?? Auth::ROLE_USER;
+            }
+        }
+        return Auth::ROLE_USER;
+    }
+
+    public function getGroupLimit(string $role): array
+    {
+        $limitsData = json_decode(file_get_contents(self::USER_LIMITS_FILE), true) ?: [];
+        
+        if (isset($limitsData['group_limits'][$role])) {
+            return array_merge($this->getDefaultLimits(), $limitsData['group_limits'][$role]);
+        }
+        
+        return array_merge($this->getDefaultLimits(), $limitsData['default_limits'] ?? []);
+    }
+
+    public function getStoredDefaultLimits(): array
+    {
+        $limitsData = json_decode(file_get_contents(self::USER_LIMITS_FILE), true) ?: [];
+        return array_merge($this->getDefaultLimits(), $limitsData['default_limits'] ?? []);
+    }
+
+    public function setGroupLimit(string $role, array $limits): bool
+    {
+        $limitsData = json_decode(file_get_contents(self::USER_LIMITS_FILE), true) ?: [];
+        
+        if (!isset($limitsData['group_limits'])) {
+            $limitsData['group_limits'] = [];
+        }
+        
+        $limitsData['group_limits'][$role] = array_merge($this->getDefaultLimits(), $limits);
+        
+        return (bool)file_put_contents(self::USER_LIMITS_FILE, json_encode($limitsData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
+
+    public function removeGroupLimit(string $role): bool
+    {
+        $limitsData = json_decode(file_get_contents(self::USER_LIMITS_FILE), true) ?: [];
+        
+        if (isset($limitsData['group_limits'][$role])) {
+            unset($limitsData['group_limits'][$role]);
+            return (bool)file_put_contents(self::USER_LIMITS_FILE, json_encode($limitsData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        }
+        
+        return true;
+    }
+
+    public function getAllGroupLimits(): array
+    {
+        $limitsData = json_decode(file_get_contents(self::USER_LIMITS_FILE), true) ?: [];
+        return $limitsData['group_limits'] ?? [];
     }
 
     public function setUserLimit(int $userId, array $limits): bool

@@ -26,16 +26,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
     if ($saveTab === 'general') {
         $settings['site_name'] = trim($_POST['site_name'] ?? 'NovelHub');
         $settings['description'] = trim($_POST['description'] ?? '');
+        if (!isset($settings['reading']) || !is_array($settings['reading'])) {
+            $settings['reading'] = [];
+        }
         $settings['reading']['default_font'] = $_POST['default_font'] ?? 'system';
         $settings['reading']['theme'] = $_POST['theme'] ?? 'day';
+        if (!isset($settings['uploads']) || !is_array($settings['uploads'])) {
+            $settings['uploads'] = [];
+        }
         $settings['uploads']['max_file_size'] = (int)($_POST['max_file_size'] ?? (5*1024*1024));
     } elseif ($saveTab === 'membership') {
+        if (!isset($settings['membership']) || !is_array($settings['membership'])) {
+            $settings['membership'] = [];
+        }
         $settings['membership']['code_length'] = max(4, min(32, (int)($_POST['code_length'] ?? 8)));
         $settings['membership']['plan_description'] = trim($_POST['plan_description'] ?? '');
+        $freeFeatures = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $_POST['free_features'] ?? '')));
+        $plusFeatures = array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $_POST['plus_features'] ?? '')));
+        $settings['membership']['free_features'] = array_values($freeFeatures);
+        $settings['membership']['plus_features'] = array_values($plusFeatures);
     } elseif ($saveTab === 'invitation') {
+        if (!isset($settings['invitation_system']) || !is_array($settings['invitation_system'])) {
+            $settings['invitation_system'] = [];
+        }
         $settings['invitation_system']['enabled'] = isset($_POST['invitation_enabled']);
         $settings['invitation_system']['code_length'] = max(4, min(32, (int)($_POST['invitation_code_length'] ?? 8)));
     } elseif ($saveTab === 'smtp') {
+        if (!isset($settings['smtp_settings']) || !is_array($settings['smtp_settings'])) {
+            $settings['smtp_settings'] = [];
+        }
         $settings['smtp_settings']['enabled'] = isset($_POST['smtp_enabled']);
         $settings['smtp_settings']['host'] = trim($_POST['smtp_host'] ?? '');
         $settings['smtp_settings']['port'] = (int)($_POST['smtp_port'] ?? 587);
@@ -47,6 +66,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         $settings['smtp_settings']['from_name'] = trim($_POST['smtp_from_name'] ?? 'NovelHub');
         $settings['smtp_settings']['encryption'] = $_POST['smtp_encryption'] ?? 'tls';
     } elseif ($saveTab === 'storage') {
+        if (!isset($settings['storage']) || !is_array($settings['storage'])) {
+            $settings['storage'] = ['database' => []];
+        }
+        if (!isset($settings['storage']['database']) || !is_array($settings['storage']['database'])) {
+            $settings['storage']['database'] = [];
+        }
         $settings['storage']['mode'] = $_POST['storage_mode'] ?? 'files';
         $settings['storage']['database']['driver'] = $_POST['db_driver'] ?? 'sqlite';
         $settings['storage']['database']['dsn'] = trim($_POST['db_dsn'] ?? (DATA_DIR . '/novelhub.sqlite'));
@@ -60,10 +85,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
         $settings['storage']['database']['prefix'] = trim($_POST['db_prefix'] ?? '');
     }
     
-    file_put_contents(SYSTEM_SETTINGS_FILE, json_encode($settings, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-    $logger->log('update_system_settings', ['tab' => $saveTab]);
-    $message = '设置已保存';
-    $messageType = 'success';
+    if (file_put_contents(SYSTEM_SETTINGS_FILE, json_encode($settings, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT))) {
+        $logger->log('update_system_settings', ['tab' => $saveTab]);
+        $message = '设置已保存';
+        $messageType = 'success';
+    } else {
+        $message = '保存失败，请检查文件权限';
+        $messageType = 'danger';
+    }
     
     // Reload settings
     $settings = json_decode(@file_get_contents(SYSTEM_SETTINGS_FILE), true) ?: [];
@@ -245,6 +274,22 @@ function testDatabaseConnection($config): array {
                 <label class="form-label">Plan 界面描述</label>
                 <textarea class="form-control" name="plan_description" rows="3"><?php echo e($settings['membership']['plan_description'] ?? ''); ?></textarea>
                 <div class="form-text">在会员计划页面显示的说明文字</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">免费版功能（每行一个）</label>
+                <textarea class="form-control" name="free_features" rows="6"><?php 
+                  $freeFeatures = $settings['membership']['free_features'] ?? [];
+                  echo e(is_array($freeFeatures) ? implode("\n", $freeFeatures) : '');
+                ?></textarea>
+                <div class="form-text">每行输入一个功能特性，将显示在会员计划页面</div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Plus 会员功能（每行一个）</label>
+                <textarea class="form-control" name="plus_features" rows="6"><?php 
+                  $plusFeatures = $settings['membership']['plus_features'] ?? [];
+                  echo e(is_array($plusFeatures) ? implode("\n", $plusFeatures) : '');
+                ?></textarea>
+                <div class="form-text">每行输入一个功能特性，将显示在会员计划页面</div>
               </div>
               <button type="submit" name="save_settings" class="btn btn-primary">保存设置</button>
             </form>

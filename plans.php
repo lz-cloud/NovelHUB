@@ -48,6 +48,20 @@ $downloadStatus = $downloadMgr->canDownload((int)$user['id']);
       border-radius: 12px;
       transition: all 0.3s ease;
       height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .plan-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.05));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .plan-card.active::after,
+    .plan-card:hover::after {
+      opacity: 1;
     }
     .plan-card.active {
       border-color: #0d6efd;
@@ -67,10 +81,13 @@ $downloadStatus = $downloadMgr->canDownload((int)$user['id']);
       border-radius: 20px;
       font-size: 0.85rem;
       font-weight: 600;
+      z-index: 2;
     }
     .feature-list {
       list-style: none;
       padding: 0;
+      position: relative;
+      z-index: 1;
     }
     .feature-list li {
       padding: 8px 0;
@@ -89,6 +106,78 @@ $downloadStatus = $downloadMgr->canDownload((int)$user['id']);
       color: white;
       border-radius: 12px;
       padding: 20px;
+    }
+    .stats-card .metric {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .stats-card .metric-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+    .plan-compare-table {
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .plan-compare-table th {
+      background: #f8f9fa;
+      text-align: center;
+    }
+    .plan-compare-table td {
+      vertical-align: middle;
+      text-align: center;
+    }
+    .plan-highlight {
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(13,110,253,0.1), rgba(13,110,253,0.05));
+      padding: 18px;
+      height: 100%;
+    }
+    .plan-highlight h5 {
+      font-weight: 600;
+    }
+    .milestone-list {
+      list-style: none;
+      padding-left: 0;
+      margin-bottom: 0;
+    }
+    .milestone-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .milestone-list li:last-child {
+      margin-bottom: 0;
+    }
+    .milestone-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #0d6efd;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+    .guarantee-card {
+      border-radius: 12px;
+      border: 1px dashed rgba(13,110,253,0.4);
+      padding: 18px;
+      background: rgba(13,110,253,0.04);
+    }
+    @media (max-width: 767px) {
+      .plan-card {
+        margin-bottom: 1rem;
+      }
     }
   </style>
 </head>
@@ -160,12 +249,18 @@ $downloadStatus = $downloadMgr->canDownload((int)$user['id']);
             <span class="text-muted">/永久</span>
           </div>
           <ul class="feature-list mb-4">
-            <li>无限阅读所有作品</li>
-            <li>创建和发布作品</li>
-            <li>每日下载 3 次</li>
-            <li>书架收藏功能</li>
-            <li>阅读进度同步</li>
-            <li>书签功能</li>
+            <?php 
+            $freeFeatures = $membershipSettings['free_features'] ?? [
+                '无限阅读所有作品',
+                '创建和发布作品',
+                '每日下载 3 次',
+                '书架收藏功能',
+                '阅读进度同步',
+                '书签功能'
+            ];
+            foreach ($freeFeatures as $feature): ?>
+              <li><?php echo e($feature); ?></li>
+            <?php endforeach; ?>
           </ul>
         </div>
       </div>
@@ -184,12 +279,18 @@ $downloadStatus = $downloadMgr->canDownload((int)$user['id']);
             <span class="text-muted">/周期制</span>
           </div>
           <ul class="feature-list mb-4">
-            <li>包含免费版所有功能</li>
-            <li><strong>无限次数下载</strong></li>
-            <li>支持 TXT、EPUB、PDF 格式</li>
-            <li>优先获得新功能</li>
-            <li>专属会员标识</li>
-            <li>无广告体验</li>
+            <?php 
+            $plusFeatures = $membershipSettings['plus_features'] ?? [
+                '包含免费版所有功能',
+                '无限次数下载',
+                '支持 TXT、EPUB、PDF 格式',
+                '优先获得新功能',
+                '专属会员标识',
+                '无广告体验'
+            ];
+            foreach ($plusFeatures as $feature): ?>
+              <li><?php echo e($feature); ?></li>
+            <?php endforeach; ?>
           </ul>
         </div>
       </div>
