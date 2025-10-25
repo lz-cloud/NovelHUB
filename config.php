@@ -25,6 +25,9 @@ define('PLUS_MEMBERSHIPS_FILE', DATA_DIR . '/plus_memberships.json');
 define('REDEMPTION_CODES_FILE', DATA_DIR . '/redemption_codes.json');
 define('INVITATION_CODES_FILE', DATA_DIR . '/invitation_codes.json');
 define('EMAIL_VERIFICATIONS_FILE', DATA_DIR . '/email_verifications.json');
+define('USER_LIMITS_FILE', DATA_DIR . '/user_limits.json');
+define('USER_USAGE_FILE', DATA_DIR . '/user_usage.json');
+define('AD_SETTINGS_FILE', DATA_DIR . '/ad_settings.json');
 
 // General settings
 ini_set('session.cookie_httponly', '1');
@@ -56,6 +59,9 @@ $ensureFiles = [
     REDEMPTION_CODES_FILE => '[]',
     INVITATION_CODES_FILE => '[]',
     EMAIL_VERIFICATIONS_FILE => '[]',
+    USER_LIMITS_FILE => json_encode(['default_limits' => ['enabled' => false, 'daily_chapter_limit' => 0, 'daily_reading_time_limit' => 0, 'concurrent_novels_limit' => 0, 'download_limit_per_day' => 0]], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+    USER_USAGE_FILE => '[]',
+    AD_SETTINGS_FILE => json_encode(['enabled' => false, 'platform' => 'none'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
 ];
 foreach ($ensureFiles as $file => $defaultContent) {
     if (!file_exists($file)) {

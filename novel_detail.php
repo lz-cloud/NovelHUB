@@ -5,6 +5,7 @@ require_once __DIR__ . '/lib/Review.php';
 require_once __DIR__ . '/lib/Export.php';
 require_once __DIR__ . '/lib/Notifier.php';
 require_once __DIR__ . '/lib/Membership.php';
+require_once __DIR__ . '/lib/AdManager.php';
 
 global $dm;
 
@@ -18,6 +19,7 @@ $reviewSvc = new ReviewService();
 $exporter = new Exporter();
 $notifier = new Notifier();
 $downloadMgr = new DownloadManager();
+$adManager = new AdManager();
 
 // Handle downloads
 if ($action === 'download') {
@@ -113,6 +115,7 @@ $hotInCategory = array_slice($hotInCategory, 0, 6);
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="/assets/style.css" rel="stylesheet">
+  <?php echo $adManager->getAdScripts(); ?>
   <style>
     .zlib-layout{display:grid; grid-template-columns: 240px 1fr; gap:20px;}
     .zlib-cover{width:100%; height:auto; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.1);} 
@@ -125,6 +128,7 @@ $hotInCategory = array_slice($hotInCategory, 0, 6);
   </style>
 </head>
 <body>
+<?php echo $adManager->renderAd('header_banner', current_user()); ?>
 <div class="container py-4">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
