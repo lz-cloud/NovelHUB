@@ -1,11 +1,18 @@
 <?php
 require_once __DIR__ . '/lib/helpers.php';
+require_once __DIR__ . '/lib/InvitationManager.php';
+require_once __DIR__ . '/lib/EmailManager.php';
+
+$invitationMgr = new InvitationManager();
+$emailMgr = new EmailManager();
 
 $errors = [];
 $username = trim($_POST['username'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $nickname = trim($_POST['nickname'] ?? '');
 $bio = trim($_POST['bio'] ?? '');
+$invitationCode = trim($_POST['invitation_code'] ?? '');
+$successMessage = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
@@ -22,6 +29,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($password !== $password2) {
         $errors[] = '两次密码输入不一致';
     }
+    
+    // Check invitation code if enabled
+    if ($invitationMgr->isEnabled()) {
+        if (empty($invitationCode)) {
+            $errors[] = '邀请码不能为空';
+        } else {
+            $validation = $invitationMgr->validateCode($invitationCode);
+            if (!$validation['valid']) {
+                $errors[] = $validation['error'] ?? '邀请码无效';
+            }
+        }
+    }
+    
     // avatar upload
     $avatar = null;
     if (!empty($_FILES['avatar']['name'])) {
@@ -39,12 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$errors) {
         $now = date('c');
+        
+        // Determine initial status based on email verification requirement
+        $initialStatus = 'active';
+        if ($emailMgr->isEnabled()) {
+            $initialStatus = 'pending_verification';
+        }
+        
         $user = [
             'username' => $username,
             'email' => $email,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
             'role' => 'user',
-            'status' => 'active',
+            'status' => $initialStatus,
             'created_at' => $now,
             'profile' => [
                 'nickname' => $nickname ?: $username,
@@ -54,10 +81,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
         $id = save_user($user);
         if ($id) {
-            $user['id'] = $id;
-            $_SESSION['user'] = $user;
-            header('Location: /dashboard.php');
-            exit;
+            // Use invitation code if provided
+            if ($invitationMgr->isEnabled() && !empty($invitationCode)) {
+                $invitationMgr->useCode($invitationCode, $id);
+            }
+            
+            // Send verification email if enabled
+            if ($emailMgr->isEnabled()) {
+                $token = $emailMgr->generateVerificationToken($id, $email);
+                $emailMgr->sendVerificationEmail($id, $email, $token);
+                $successMessage = '注册成功！请检查您的邮箱并点击验证链接以激活账号。';
+                // 清空表单字段
+                $username = $email = $nickname = $bio = $invitationCode = '';
+            } else {
+                $user['id'] = $id;
+                $_SESSION['user'] = $user;
+                header('Location: /dashboard.php');
+                exit;
+            }
         } else {
             $errors[] = '注册失败，请稍后再试';
         }
@@ -83,6 +124,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <ul class="mb-0">
         <?php foreach ($errors as $e): ?><li><?php echo e($e); ?></li><?php endforeach; ?>
       </ul>
+    </div>
+  <?php endif; ?>
+  <?php if ($successMessage): ?>
+    <div class="alert alert-success">
+      <?php echo e($successMessage); ?>
     </div>
   <?php endif; ?>
   <form method="post" enctype="multipart/form-data">
@@ -116,6 +162,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <label class="form-label">头像（可选）</label>
       <input type="file" class="form-control" name="avatar" accept="image/*">
     </div>
+    <?php if ($invitationMgr->isEnabled()): ?>
+    <div class="mb-3">
+      <label class="form-label">邀请码 <span class="text-danger">*</span></label>
+      <input class="form-control" name="invitation_code" value="<?php echo e($invitationCode); ?>" required placeholder="请输入邀请码">
+      <div class="form-text">注册需要有效的邀请码</div>
+    </div>
+    <?php endif; ?>
     <button class="btn btn-primary">注册</button>
     <a href="/login.php" class="btn btn-link">已有账号？登录</a>
   </form>

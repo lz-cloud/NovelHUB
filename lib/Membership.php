@@ -12,6 +12,15 @@ class Membership
     }
 
     /**
+     * Get membership settings
+     */
+    public function getSettings(): array
+    {
+        $settings = json_decode(@file_get_contents(SYSTEM_SETTINGS_FILE), true) ?: [];
+        return $settings['membership'] ?? ['code_length' => 8, 'plan_description' => '兑换码激活 Plus 会员'];
+    }
+
+    /**
      * Check if user has active Plus membership
      */
     public function isPlusUser(int $userId): bool
@@ -140,7 +149,13 @@ class Membership
      */
     public function generateCode(int $durationDays, int $maxUses = 1, ?string $expiresAt = null): string
     {
-        $code = strtoupper(bin2hex(random_bytes(4))); // 8-character code
+        $settings = $this->getSettings();
+        $length = (int)($settings['code_length'] ?? 8);
+        
+        // Generate code with specified length
+        $code = strtoupper(bin2hex(random_bytes((int)ceil($length / 2))));
+        $code = substr($code, 0, $length);
+        
         $codes = $this->dm->readJson(REDEMPTION_CODES_FILE, []);
 
         $codeData = [

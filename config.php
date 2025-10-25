@@ -23,6 +23,8 @@ define('BOOKMARKS_FILE', DATA_DIR . '/bookmarks.json');
 define('DOWNLOADS_FILE', DATA_DIR . '/downloads.json');
 define('PLUS_MEMBERSHIPS_FILE', DATA_DIR . '/plus_memberships.json');
 define('REDEMPTION_CODES_FILE', DATA_DIR . '/redemption_codes.json');
+define('INVITATION_CODES_FILE', DATA_DIR . '/invitation_codes.json');
+define('EMAIL_VERIFICATIONS_FILE', DATA_DIR . '/email_verifications.json');
 
 // General settings
 ini_set('session.cookie_httponly', '1');
@@ -52,6 +54,8 @@ $ensureFiles = [
     DOWNLOADS_FILE => '[]',
     PLUS_MEMBERSHIPS_FILE => '[]',
     REDEMPTION_CODES_FILE => '[]',
+    INVITATION_CODES_FILE => '[]',
+    EMAIL_VERIFICATIONS_FILE => '[]',
 ];
 foreach ($ensureFiles as $file => $defaultContent) {
     if (!file_exists($file)) {
@@ -116,7 +120,33 @@ foreach ($moreDirs as $d) {
     if (!is_writable($d)) { @chmod($d, 0775); if (!is_writable($d)) @chmod($d, 0777); }
 }
 $ensureMoreFiles = [
-    SYSTEM_SETTINGS_FILE => json_encode(['site_name'=>'NovelHub','logo'=>null,'description'=>'开源小说阅读与创作平台','reading'=>['default_font'=>'system','theme'=>'day'],'uploads'=>['max_file_size'=>5*1024*1024,'image_formats'=>['jpg','png','gif','webp']]], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+    SYSTEM_SETTINGS_FILE => json_encode(['site_name'=>'NovelHub','logo'=>null,'description'=>'开源小说阅读与创作平台','reading'=>['default_font'=>'system','theme'=>'day'],
+        'uploads'=>['max_file_size'=>5*1024*1024,'image_formats'=>['jpg','png','gif','webp']],
+        'membership'=>['code_length'=>8,'plan_description'=>'兑换码激活 Plus 会员，享受无限下载等权益'],
+        'invitation_system'=>['enabled'=>false,'code_length'=>8],
+        'smtp_settings'=>[
+            'enabled'=>false,
+            'host'=>'',
+            'port'=>587,
+            'username'=>'',
+            'password'=>'',
+            'from_email'=>'',
+            'from_name'=>'NovelHub',
+            'encryption'=>'tls'
+        ],
+        'storage'=>[
+            'mode'=>'files', // files or database
+            'database'=>[
+                'driver'=>'sqlite',
+                'dsn'=>DATA_DIR . '/novelhub.sqlite',
+                'host'=>'localhost',
+                'port'=>3306,
+                'database'=>'',
+                'username'=>'',
+                'password'=>'',
+                'prefix'=>''
+            ]
+        ]], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
     NOTIFICATIONS_FILE => '[]',
     SYSTEM_STATISTICS_FILE => json_encode(['generated_at'=>date('c')], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
     ADMIN_AUDIT_FILE => '[]',

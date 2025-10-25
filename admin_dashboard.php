@@ -124,6 +124,7 @@ $overview = $statsSvc->computePlatformOverview();
     <li class="nav-item"><a class="nav-link <?php if($tab==='users') echo 'active'; ?>" href="/admin_dashboard.php?tab=users">用户管理</a></li>
     <li class="nav-item"><a class="nav-link <?php if($tab==='system') echo 'active'; ?>" href="/admin_dashboard.php?tab=system">系统管理</a></li>
     <li class="nav-item"><a class="nav-link" href="/admin_membership.php">会员管理</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin_settings.php">系统设置</a></li>
   </ul>
 
   <?php if ($tab==='overview'): ?>
