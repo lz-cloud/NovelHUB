@@ -104,9 +104,10 @@ $users = load_users();
 $userLimits = $limitsManager->getAllUserLimits();
 $groupLimits = $limitsManager->getAllGroupLimits();
 $availableRoles = [
-    'user' => '普通用户',
-    'content_admin' => '内容管理员',
-    'super_admin' => '超级管理员'
+    Auth::ROLE_USER => '普通用户',
+    Auth::ROLE_PLUS => 'Plus 会员',
+    Auth::ROLE_CONTENT_ADMIN => '内容管理员',
+    Auth::ROLE_SUPER_ADMIN => '超级管理员'
 ];
 
 ?>
@@ -291,9 +292,26 @@ $availableRoles = [
                     </td>
                     <td>
                       <?php 
-                        $role = $user['role'] ?? 'user';
-                        $roleBadge = $role === 'super_admin' ? 'danger' : ($role === 'content_admin' ? 'warning' : 'secondary');
-                        $roleText = $role === 'super_admin' ? '超级管理员' : ($role === 'content_admin' ? '内容管理员' : '普通用户');
+                        $role = $user['role'] ?? Auth::ROLE_USER;
+                        switch ($role) {
+                          case Auth::ROLE_SUPER_ADMIN:
+                            $roleBadge = 'danger';
+                            $roleText = '超级管理员';
+                            break;
+                          case Auth::ROLE_CONTENT_ADMIN:
+                          case Auth::ROLE_ADMIN:
+                            $roleBadge = 'warning';
+                            $roleText = '内容管理员';
+                            break;
+                          case Auth::ROLE_PLUS:
+                            $roleBadge = 'success';
+                            $roleText = 'Plus 会员';
+                            break;
+                          default:
+                            $roleBadge = 'secondary';
+                            $roleText = '普通用户';
+                            break;
+                        }
                       ?>
                       <span class="badge bg-<?php echo $roleBadge; ?>"><?php echo $roleText; ?></span>
                     </td>
