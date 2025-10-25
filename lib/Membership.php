@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/DataManager.php';
+require_once __DIR__ . '/Auth.php';
 
 class Membership
 {
@@ -9,6 +10,47 @@ class Membership
     public function __construct()
     {
         $this->dm = new DataManager(DATA_DIR);
+    }
+
+    private function refreshUserSession(int $userId): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+        if (!isset($_SESSION['user']) || (int)($_SESSION['user']['id'] ?? 0) !== $userId) {
+            return;
+        }
+        $user = $this->dm->findById(USERS_FILE, $userId);
+        if ($user) {
+            $_SESSION['user'] = $user;
+        }
+    }
+
+    private function syncUserGroup(int $userId, bool $hasActiveMembership): void
+    {
+        if ($userId <= 0) {
+            return;
+        }
+
+        $user = $this->dm->findById(USERS_FILE, $userId);
+        if (!$user) {
+            return;
+        }
+
+        $currentRole = $user['role'] ?? Auth::ROLE_USER;
+
+        if ($hasActiveMembership) {
+            if ($currentRole === Auth::ROLE_USER) {
+                $this->dm->updateById(USERS_FILE, $userId, ['role' => Auth::ROLE_PLUS]);
+                $this->refreshUserSession($userId);
+            }
+            return;
+        }
+
+        if ($currentRole === Auth::ROLE_PLUS) {
+            $this->dm->updateById(USERS_FILE, $userId, ['role' => Auth::ROLE_USER]);
+            $this->refreshUserSession($userId);
+        }
     }
 
     /**
@@ -53,15 +95,18 @@ class Membership
     public function isPlusUser(int $userId): bool
     {
         $memberships = $this->dm->readJson(PLUS_MEMBERSHIPS_FILE, []);
+        $hasActive = false;
         foreach ($memberships as $m) {
             if ((int)($m['user_id'] ?? 0) === $userId) {
                 $expiresAt = $m['expires_at'] ?? null;
                 if ($expiresAt && strtotime($expiresAt) > time()) {
-                    return true;
+                    $hasActive = true;
+                    break;
                 }
             }
         }
-        return false;
+        $this->syncUserGroup($userId, $hasActive);
+        return $hasActive;
     }
 
     /**
@@ -74,10 +119,12 @@ class Membership
             if ((int)($m['user_id'] ?? 0) === $userId) {
                 $expiresAt = $m['expires_at'] ?? null;
                 if ($expiresAt && strtotime($expiresAt) > time()) {
+                    $this->syncUserGroup($userId, true);
                     return $m;
                 }
             }
         }
+        $this->syncUserGroup($userId, false);
         return null;
     }
 
@@ -167,6 +214,7 @@ class Membership
         }
 
         $this->dm->writeJson(PLUS_MEMBERSHIPS_FILE, $memberships);
+        $this->syncUserGroup($userId, true);
 
         // Update code usage
         $codes[$codeIndex]['used_count'] = $usedCount + 1;

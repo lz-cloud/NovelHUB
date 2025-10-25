@@ -76,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['extend_membership']))
         }
         
         $dm->writeJson(PLUS_MEMBERSHIPS_FILE, $memberships);
+        $membership->isPlusUser($userId);
         $logger->log('extend_membership_manual', ['user_id' => $userId, 'duration_days' => $durationDays]);
         $messageType = 'success';
         $message = "会员已延长 $durationDays 天";

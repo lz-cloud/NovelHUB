@@ -11,6 +11,7 @@ class Auth
     public const ROLE_SUPER_ADMIN   = 'super_admin';
     public const ROLE_CONTENT_ADMIN = 'content_admin';
     public const ROLE_ADMIN         = 'admin'; // legacy
+    public const ROLE_PLUS          = 'plus';
     public const ROLE_USER          = 'user';
 
     public static function user()

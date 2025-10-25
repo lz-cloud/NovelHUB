@@ -271,20 +271,33 @@ $overview = $statsSvc->computePlatformOverview();
                 <tr>
                   <td><?php echo (int)$u['id']; ?></td>
                   <td><?php echo e($u['username']); ?></td>
-                  <td><?php echo e($u['role'] ?? 'user'); ?></td>
+                  <td>
+                    <?php
+                      $role = $u['role'] ?? Auth::ROLE_USER;
+                      $roleLabels = [
+                        Auth::ROLE_USER => '普通用户',
+                        Auth::ROLE_PLUS => 'Plus 会员',
+                        Auth::ROLE_CONTENT_ADMIN => '内容管理员',
+                        Auth::ROLE_ADMIN => '内容管理员',
+                        Auth::ROLE_SUPER_ADMIN => '超级管理员',
+                      ];
+                    ?>
+                    <?php echo e($roleLabels[$role] ?? $role); ?>
+                  </td>
                   <td>
                     <form method="post" class="d-inline">
                       <input type="hidden" name="action" value="set_role">
                       <input type="hidden" name="user_id" value="<?php echo (int)$u['id']; ?>">
                       <select class="form-select form-select-sm" name="role" style="width:auto;display:inline-block;">
-                        <option value="user" <?php if(($u['role']??'')==='user') echo 'selected'; ?>>普通用户</option>
-                        <option value="content_admin" <?php if(($u['role']??'')==='content_admin' || ($u['role']??'')==='admin') echo 'selected'; ?>>内容管理员</option>
-                        <option value="super_admin" <?php if(($u['role']??'')==='super_admin') echo 'selected'; ?>>超级管理员</option>
+                        <option value="<?php echo Auth::ROLE_USER; ?>" <?php if(($u['role'] ?? '') === Auth::ROLE_USER) echo 'selected'; ?>>普通用户</option>
+                        <option value="<?php echo Auth::ROLE_PLUS; ?>" <?php if(($u['role'] ?? '') === Auth::ROLE_PLUS) echo 'selected'; ?>>Plus 会员</option>
+                        <option value="<?php echo Auth::ROLE_CONTENT_ADMIN; ?>" <?php if(($u['role'] ?? '') === Auth::ROLE_CONTENT_ADMIN || ($u['role'] ?? '') === Auth::ROLE_ADMIN) echo 'selected'; ?>>内容管理员</option>
+                        <option value="<?php echo Auth::ROLE_SUPER_ADMIN; ?>" <?php if(($u['role'] ?? '') === Auth::ROLE_SUPER_ADMIN) echo 'selected'; ?>>超级管理员</option>
                       </select>
                       <button class="btn btn-sm btn-primary">保存</button>
                     </form>
                   </td>
-                </tr>
+
               <?php endforeach; ?>
             </tbody>
           </table>
