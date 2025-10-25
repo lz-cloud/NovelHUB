@@ -8,6 +8,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = find_user_by_login($login);
     if (!$user) {
         $errors[] = '用户不存在';
+    } else if (($user['status'] ?? 'active') === 'pending_verification') {
+        $errors[] = '邮箱未验证，请先完成邮箱验证后再登录。';
     } else if (($user['status'] ?? 'active') !== 'active') {
         $errors[] = '账号已被禁用';
     } else if (!password_verify($password, $user['password_hash'])) {

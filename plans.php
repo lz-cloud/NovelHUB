@@ -10,6 +10,9 @@ $downloadMgr = new DownloadManager();
 $message = null;
 $messageType = null;
 
+// Get membership settings
+$membershipSettings = $membership->getSettings();
+
 // Handle code redemption
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_code'])) {
     $code = trim($_POST['code'] ?? '');
@@ -138,6 +141,11 @@ $downloadStatus = $downloadMgr->canDownload((int)$user['id']);
 
   <!-- Plans -->
   <h3 class="mb-4">选择你的计划</h3>
+  <?php if (!empty($membershipSettings['plan_description'])): ?>
+  <div class="alert alert-info mb-4">
+    <?php echo nl2br(e($membershipSettings['plan_description'])); ?>
+  </div>
+  <?php endif; ?>
   <div class="row g-4 mb-5">
     <!-- Free Plan -->
     <div class="col-md-6">
@@ -198,7 +206,7 @@ $downloadStatus = $downloadMgr->canDownload((int)$user['id']);
           <form method="post">
             <div class="mb-3">
               <label for="code" class="form-label">兑换码</label>
-              <input type="text" class="form-control form-control-lg" id="code" name="code" placeholder="请输入兑换码" required>
+              <input type="text" class="form-control form-control-lg" id="code" name="code" placeholder="请输入 <?php echo (int)($membershipSettings['code_length'] ?? 8); ?> 位兑换码" required>
               <div class="form-text">兑换码不区分大小写，请联系管理员获取</div>
             </div>
             <button type="submit" name="redeem_code" class="btn btn-primary btn-lg w-100">立即兑换</button>

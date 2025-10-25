@@ -152,6 +152,14 @@ $downloadStats = $downloadMgr->getDownloadStats();
                 <label for="max_uses" class="form-label">最大使用次数</label>
                 <input type="number" class="form-control" id="max_uses" name="max_uses" value="1" min="1" required>
               </div>
+              <div class="form-text mb-2">
+                <?php 
+                  $settings = json_decode(@file_get_contents(SYSTEM_SETTINGS_FILE), true) ?: [];
+                  $codeLength = (int)($settings['membership']['code_length'] ?? 8);
+                ?>
+                当前兑换码长度：<?php echo $codeLength; ?> 位
+                <a href="/admin_settings.php?tab=membership" class="small">修改设置</a>
+              </div>
               <div class="mb-3">
                 <label for="expires_at" class="form-label">兑换码有效期（可选）</label>
                 <input type="datetime-local" class="form-control" id="expires_at" name="expires_at">
