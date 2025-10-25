@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/lib/helpers.php';
+require_once __DIR__ . '/lib/UserLimits.php';
+require_once __DIR__ . '/lib/AdManager.php';
 
 if (!function_exists('render_paragraphs')) {
     function render_paragraphs(string $text)
@@ -129,6 +131,36 @@ if ($action) {
 $novel = $novel_id ? find_novel($novel_id) : null;
 if (!$novel) { http_response_code(404); echo '小说不存在'; exit; }
 
+// Check user limits
+$limitsManager = new UserLimits();
+$adManager = new AdManager();
+$user = current_user();
+$limitWarning = null;
+
+if ($user && $chapter_id > 0) {
+    $userId = (int)$user['id'];
+    $limitCheck = $limitsManager->checkLimit($userId, 'chapter');
+    
+    if (!$limitCheck['allowed']) {
+        $limitWarning = sprintf(
+            '您今日的阅读章节已达到限制（%d/%d章）。明天再来阅读更多内容吧！',
+            $limitCheck['used'] ?? 0,
+            $limitCheck['limit'] ?? 0
+        );
+        http_response_code(403);
+        echo '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>阅读限制</title>';
+        echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">';
+        echo '</head><body><div class="container py-5"><div class="alert alert-warning">';
+        echo '<h4>阅读限制</h4><p>' . e($limitWarning) . '</p>';
+        echo '<a href="/plans.php" class="btn btn-primary">升级会员获得无限阅读</a> ';
+        echo '<a href="/" class="btn btn-secondary">返回首页</a>';
+        echo '</div></div></body></html>';
+        exit;
+    }
+    
+    $limitsManager->recordChapterRead($userId, $novel_id, $chapter_id);
+}
+
 // Auto-resume if no chapter specified and user has saved progress
 if ($chapter_id <= 0) {
     $u = current_user();
@@ -179,6 +211,7 @@ $deviceClass = is_mobile_device() ? 'device-mobile' : 'device-desktop';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="/assets/style.css" rel="stylesheet">
   <link href="/assets/reader.css" rel="stylesheet">
+  <?php echo $adManager->getAdScripts(); ?>
 </head>
 <body class="reading theme-day <?php echo $deviceClass; ?>" data-logged-in="<?php echo current_user() ? '1' : '0'; ?>">
 <div id="readerApp" class="nh-reader">
@@ -213,6 +246,8 @@ $deviceClass = is_mobile_device() ? 'device-mobile' : 'device-desktop';
     <h1 class="h4 mb-2 d-md-none"><?php echo e($novel['title']); ?></h1>
     <div class="text-muted mb-2 d-md-none">作者：<?php echo e(get_user_display_name((int)$novel['author_id'])); ?> · 更新：<?php echo e($chapter['updated_at']); ?></div>
   </div>
+
+  <?php echo $adManager->renderAd('header_banner', $user); ?>
 
   <div class="nh-reader__viewport width-standard" id="readerViewport"
        data-novel-id="<?php echo (int)$novel_id; ?>"

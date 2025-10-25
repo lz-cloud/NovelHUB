@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/lib/helpers.php';
 require_once __DIR__ . '/lib/Membership.php';
+require_once __DIR__ . '/lib/AdManager.php';
 if (!function_exists('mb_strtolower')) {
     function mb_strtolower($s) { return strtolower($s); }
 }
@@ -20,6 +21,7 @@ if ($currentUser) {
     $membershipSvc = new Membership();
     $isPlusUser = $membershipSvc->isPlusUser((int)$currentUser['id']);
 }
+$adManager = new AdManager();
 
 $query = trim($_GET['q'] ?? '');
 $category = isset($_GET['category']) ? (int)$_GET['category'] : 0;
@@ -69,6 +71,7 @@ usort($novels, function($a,$b) use ($sort) {
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="/assets/style.css" rel="stylesheet">
+  <?php echo $adManager->getAdScripts(); ?>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -89,6 +92,7 @@ usort($novels, function($a,$b) use ($sort) {
     </div>
   </div>
 </nav>
+<?php echo $adManager->renderAd('header_banner', $currentUser); ?>
 <div class="container my-4 nh-list">
   <form class="row g-2 mb-3" method="get">
     <div class="col-12 col-md-auto">
