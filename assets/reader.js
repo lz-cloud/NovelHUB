@@ -78,7 +78,7 @@
       document.documentElement.style.setProperty('--reader-font-family', ff);
     }
     if (s.theme) {
-      document.body.classList.remove('theme-day','theme-night','theme-eye');
+      document.body.classList.remove('theme-original','theme-day','theme-night','theme-eye','theme-zlibrary');
       document.body.classList.add('theme-' + s.theme);
       syncThemeColorMeta(s.theme);
     }
@@ -97,12 +97,13 @@
   function saveSettings(s){ localStorage.setItem('reader:settings', JSON.stringify(s)); }
   function loadSettings(){ try { return JSON.parse(localStorage.getItem('reader:settings')||'{}') } catch(e){ return {}; } }
 
+  const defaultReaderTheme = document.body.dataset.defaultTheme || 'original';
   const settings = Object.assign({
     fontSize: 18,
     fontFamily: 'system',
     lineHeight: 1.6,
     paraSpace: 0.9,
-    theme: 'day',
+    theme: defaultReaderTheme,
     widthMode: 'standard',
     brightness: 1,
     focusMode: false,

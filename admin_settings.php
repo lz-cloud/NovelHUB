@@ -26,11 +26,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
     if ($saveTab === 'general') {
         $settings['site_name'] = trim($_POST['site_name'] ?? 'NovelHub');
         $settings['description'] = trim($_POST['description'] ?? '');
+        if (!isset($settings['appearance']) || !is_array($settings['appearance'])) {
+            $settings['appearance'] = [];
+        }
+        $siteTheme = $_POST['site_theme'] ?? 'original';
+        $allowedSiteThemes = ['original', 'zlibrary'];
+        if (!in_array($siteTheme, $allowedSiteThemes, true)) {
+            $siteTheme = 'original';
+        }
+        $settings['appearance']['site_theme'] = $siteTheme;
         if (!isset($settings['reading']) || !is_array($settings['reading'])) {
             $settings['reading'] = [];
         }
         $settings['reading']['default_font'] = $_POST['default_font'] ?? 'system';
-        $settings['reading']['theme'] = $_POST['theme'] ?? 'day';
+        $readingTheme = $_POST['theme'] ?? 'original';
+        $allowedReadingThemes = ['original', 'day', 'night', 'eye', 'zlibrary'];
+        if (!in_array($readingTheme, $allowedReadingThemes, true)) {
+            $readingTheme = 'original';
+        }
+        $settings['reading']['theme'] = $readingTheme;
         if (!isset($settings['uploads']) || !is_array($settings['uploads'])) {
             $settings['uploads'] = [];
         }
@@ -226,6 +240,14 @@ function testDatabaseConnection($config): array {
                 <label class="form-label">站点描述</label>
                 <textarea class="form-control" name="description" rows="3"><?php echo e($settings['description'] ?? ''); ?></textarea>
               </div>
+              <div class="mb-3">
+                <label class="form-label">站点主题</label>
+                <select class="form-select" name="site_theme">
+                  <option value="original" <?php if(($settings['appearance']['site_theme'] ?? 'original')==='original') echo 'selected'; ?>>原版</option>
+                  <option value="zlibrary" <?php if(($settings['appearance']['site_theme'] ?? '')==='zlibrary') echo 'selected'; ?>>Z-Library</option>
+                </select>
+                <div class="form-text">设置站点首页和仪表盘等页面的主题风格</div>
+              </div>
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label class="form-label">默认字体</label>
@@ -239,9 +261,11 @@ function testDatabaseConnection($config): array {
                 <div class="col-md-6 mb-3">
                   <label class="form-label">默认主题</label>
                   <select class="form-select" name="theme">
+                    <option value="original" <?php if(($settings['reading']['theme'] ?? 'day')==='original') echo 'selected'; ?>>原版</option>
                     <option value="day" <?php if(($settings['reading']['theme'] ?? 'day')==='day') echo 'selected'; ?>>日间</option>
                     <option value="night" <?php if(($settings['reading']['theme'] ?? '')==='night') echo 'selected'; ?>>夜间</option>
                     <option value="eye" <?php if(($settings['reading']['theme'] ?? '')==='eye') echo 'selected'; ?>>护眼</option>
+                    <option value="zlibrary" <?php if(($settings['reading']['theme'] ?? '')==='zlibrary') echo 'selected'; ?>>Z-Library</option>
                   </select>
                 </div>
               </div>

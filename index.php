@@ -22,6 +22,7 @@ if ($currentUser) {
     $isPlusUser = $membershipSvc->isPlusUser((int)$currentUser['id']);
 }
 $adManager = new AdManager();
+$siteTheme = get_site_theme();
 
 $query = trim($_GET['q'] ?? '');
 $category = isset($_GET['category']) ? (int)$_GET['category'] : 0;
@@ -71,9 +72,10 @@ usort($novels, function($a,$b) use ($sort) {
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="/assets/style.css" rel="stylesheet">
+  <link href="/assets/css/theme-zlibrary.css" rel="stylesheet">
   <?php echo $adManager->getAdScripts(); ?>
 </head>
-<body>
+<body class="<?php echo site_theme_class(); ?>">
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="/">NovelHub</a>

@@ -4,6 +4,7 @@ require_login();
 
 $user = current_user();
 $myNovels = array_values(array_filter(load_novels(), function($n) use ($user){ return (int)$n['author_id'] === (int)$user['id']; }));
+$siteTheme = get_site_theme();
 ?>
 <!doctype html>
 <html lang="zh-CN">
@@ -15,8 +16,9 @@ $myNovels = array_values(array_filter(load_novels(), function($n) use ($user){ r
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="/assets/style.css" rel="stylesheet">
+  <link href="/assets/css/theme-zlibrary.css" rel="stylesheet">
 </head>
-<body>
+<body class="<?php echo site_theme_class(); ?>">
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1>作者仪表盘</h1>
@@ -27,6 +29,7 @@ $myNovels = array_values(array_filter(load_novels(), function($n) use ($user){ r
   </div>
   <div class="mb-4">
     <a class="btn btn-primary" href="/create_novel.php">+ 创建新小说</a>
+    <a class="btn btn-info" href="/import_zlibrary.php">导入 Z-Library 书籍</a>
     <?php if (is_admin()): ?>
       <a class="btn btn-warning" href="/admin.php">管理员后台</a>
       <a class="btn btn-warning" href="/admin_dashboard.php">管理仪表盘</a>

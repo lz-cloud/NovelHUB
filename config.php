@@ -126,7 +126,7 @@ foreach ($moreDirs as $d) {
     if (!is_writable($d)) { @chmod($d, 0775); if (!is_writable($d)) @chmod($d, 0777); }
 }
 $ensureMoreFiles = [
-    SYSTEM_SETTINGS_FILE => json_encode(['site_name'=>'NovelHub','logo'=>null,'description'=>'开源小说阅读与创作平台','reading'=>['default_font'=>'system','theme'=>'day'],
+    SYSTEM_SETTINGS_FILE => json_encode(['site_name'=>'NovelHub','logo'=>null,'description'=>'开源小说阅读与创作平台','appearance'=>['site_theme'=>'original'],'reading'=>['default_font'=>'system','theme'=>'original'],
         'uploads'=>['max_file_size'=>5*1024*1024,'image_formats'=>['jpg','png','gif','webp']],
         'membership'=>[
             'code_length'=>8,
