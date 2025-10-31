@@ -33,6 +33,35 @@ function ensure_default_admin() {
 }
 ensure_default_admin();
 
+function get_system_settings(): array
+{
+    $settings = json_decode(@file_get_contents(SYSTEM_SETTINGS_FILE), true);
+    return is_array($settings) ? $settings : [];
+}
+
+function get_site_theme(): string
+{
+    $settings = get_system_settings();
+    $theme = $settings['appearance']['site_theme'] ?? 'original';
+    $allowed = ['original', 'zlibrary'];
+    return in_array($theme, $allowed, true) ? $theme : 'original';
+}
+
+function get_default_reading_theme(): string
+{
+    $settings = get_system_settings();
+    $theme = $settings['reading']['theme'] ?? 'original';
+    $allowed = ['original', 'day', 'night', 'eye', 'zlibrary'];
+    return in_array($theme, $allowed, true) ? $theme : 'original';
+}
+
+function site_theme_class(string $extraClasses = ''): string
+{
+    $themeClass = 'site-theme-' . get_site_theme();
+    $extraClasses = trim($extraClasses);
+    return trim($extraClasses . ' ' . $themeClass);
+}
+
 function current_user()
 {
     return $_SESSION['user'] ?? null;

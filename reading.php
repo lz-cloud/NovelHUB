@@ -198,6 +198,7 @@ $currentIndex = array_search($chapter_id, $chapterIds, true);
 $prevId = $currentIndex !== false && $currentIndex > 0 ? $chapterIds[$currentIndex - 1] : null;
 $nextId = $currentIndex !== false && $currentIndex < count($chapterIds)-1 ? $chapterIds[$currentIndex + 1] : null;
 $deviceClass = is_mobile_device() ? 'device-mobile' : 'device-desktop';
+$defaultReadingTheme = get_default_reading_theme();
 ?>
 <!doctype html>
 <html lang="zh-CN">
@@ -211,9 +212,10 @@ $deviceClass = is_mobile_device() ? 'device-mobile' : 'device-desktop';
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="/assets/style.css" rel="stylesheet">
   <link href="/assets/reader.css" rel="stylesheet">
+  <link href="/assets/css/theme-zlibrary.css" rel="stylesheet">
   <?php echo $adManager->getAdScripts(); ?>
 </head>
-<body class="reading theme-day <?php echo $deviceClass; ?>" data-logged-in="<?php echo current_user() ? '1' : '0'; ?>">
+<body class="<?php echo site_theme_class('reading theme-' . $defaultReadingTheme . ' ' . $deviceClass); ?>" data-logged-in="<?php echo current_user() ? '1' : '0'; ?>" data-default-theme="<?php echo $defaultReadingTheme; ?>">
 <div id="readerApp" class="nh-reader">
   <div class="nh-reader__topbar">
     <div class="nh-reader__row container-fluid">
@@ -348,12 +350,14 @@ $deviceClass = is_mobile_device() ? 'device-mobile' : 'device-desktop';
         </div>
       </div>
       <div class="row mt-2">
-        <div class="col-6 col-md-3">
+        <div class="col-12 col-md-6">
           <label class="form-label text-white-50">主题</label>
-          <div class="d-flex gap-2">
+          <div class="d-flex gap-2 flex-wrap">
+            <button data-theme="original" class="btn btn-sm btn-secondary">原版</button>
             <button data-theme="day" class="btn btn-sm btn-light">日间</button>
             <button data-theme="night" class="btn btn-sm btn-dark">夜间</button>
             <button data-theme="eye" class="btn btn-sm btn-warning">护眼</button>
+            <button data-theme="zlibrary" class="btn btn-sm btn-info">Z-Library</button>
           </div>
         </div>
         <div class="col-6 col-md-3">

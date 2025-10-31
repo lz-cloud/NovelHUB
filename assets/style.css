@@ -8,55 +8,58 @@
 
 html,body{height:100%;}
 body{
-  background:#f6f7fb;
-  color:var(--nh-text);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
 
-.navbar{background:var(--nh-primary)!important;}
-.navbar .navbar-brand{font-weight:700; letter-spacing:.5px;}
-.navbar .btn{border-color:rgba(255,255,255,.6);}
+body.site-theme-original{
+  background:#f6f7fb;
+  color:var(--nh-text);
+}
 
-.container .card{border:none; box-shadow:0 2px 10px rgba(0,0,0,.05);} 
-.card .card-title{font-size:1.1rem;}
-.card .card-text{color:var(--nh-muted);} 
+body.site-theme-original .navbar{background:var(--nh-primary)!important;}
+body.site-theme-original .navbar .navbar-brand{font-weight:700; letter-spacing:.5px;}
+body.site-theme-original .navbar .btn{border-color:rgba(255,255,255,.6);}
+
+body.site-theme-original .container .card{border:none; box-shadow:0 2px 10px rgba(0,0,0,.05);} 
+body.site-theme-original .card .card-title{font-size:1.1rem;}
+body.site-theme-original .card .card-text{color:var(--nh-muted);} 
 
 /* Index: make novel cards more like list items */
-.nh-list .card{display:flex; flex-direction:row; align-items:stretch;}
-.nh-list .card-img-top{width:120px; height:160px; object-fit:cover; border-top-left-radius:.5rem; border-bottom-left-radius:.5rem;}
-.nh-list .card-body{display:flex; flex-direction:column;}
-.nh-list .card-body .btn{align-self:flex-start;}
+body.site-theme-original .nh-list .card{display:flex; flex-direction:row; align-items:stretch;}
+body.site-theme-original .nh-list .card-img-top{width:120px; height:160px; object-fit:cover; border-top-left-radius:.5rem; border-bottom-left-radius:.5rem;}
+body.site-theme-original .nh-list .card-body{display:flex; flex-direction:column;}
+body.site-theme-original .nh-list .card-body .btn{align-self:flex-start;}
 
 /* Reading page */
-body.reading{
+body.reading.site-theme-original{
   background:#f5f5f1;
 }
-.reading .reading-container{max-width:880px;}
-.reading .chapter-content{
+body.site-theme-original .reading-container{max-width:880px;}
+body.site-theme-original .chapter-content{
   background:#fffbe6;
   border:1px solid #f0e6c3;
   line-height:1.95; font-size:18px; padding:24px; border-radius:6px;
 }
-.reading .reading-nav .btn{min-width:96px;}
+body.site-theme-original .reading-nav .btn{min-width:96px;}
 
 /* Tables and lists */
-.table thead th{color:#555; background:#f8f9fb;}
-.list-group-item{border-color:#eee;}
+body.site-theme-original .table thead th{color:#555; background:#f8f9fb;}
+body.site-theme-original .list-group-item{border-color:#eee;}
 
 /* Forms */
-.btn-primary{background:var(--nh-primary); border-color:var(--nh-primary);} 
-.btn-outline-secondary{color:#3f4a56; border-color:#cfd6df;}
-.form-control, .form-select{border-color:#dfe3ea;}
+body.site-theme-original .btn-primary{background:var(--nh-primary); border-color:var(--nh-primary);} 
+body.site-theme-original .btn-outline-secondary{color:#3f4a56; border-color:#cfd6df;}
+body.site-theme-original .form-control, body.site-theme-original .form-select{border-color:#dfe3ea;}
 
 /* Footer (optional) */
-.footer{color:#8c98a4; font-size:.9rem;}
+body.site-theme-original .footer{color:#8c98a4; font-size:.9rem;}
 
 /* Responsive utility for details page */
-.zlib-layout{display:grid; grid-template-columns: 240px 1fr; gap:20px;}
-@media (max-width: 768px){ .zlib-layout{ grid-template-columns: 1fr; } }
+body.site-theme-original .zlib-layout{display:grid; grid-template-columns: 240px 1fr; gap:20px;}
+@media (max-width: 768px){ body.site-theme-original .zlib-layout{ grid-template-columns: 1fr; } }
 
 /* Timeline */
-.timeline{ list-style:none; padding-left:0; }
-.timeline li{ position:relative; padding-left:20px; margin-bottom:8px; }
-.timeline li::before{ content:''; position:absolute; left:6px; top:6px; width:6px; height:6px; background:var(--nh-primary); border-radius:50%; }
+body.site-theme-original .timeline{ list-style:none; padding-left:0; }
+body.site-theme-original .timeline li{ position:relative; padding-left:20px; margin-bottom:8px; }
+body.site-theme-original .timeline li::before{ content:''; position:absolute; left:6px; top:6px; width:6px; height:6px; background:var(--nh-primary); border-radius:50%; }
