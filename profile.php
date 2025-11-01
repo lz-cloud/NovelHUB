@@ -35,7 +35,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_category'])) {
 }
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_category'])) {
     $name = trim($_POST['category'] ?? '');
-    $extra['shelf_categories'] = array_values(array_filter($extra['shelf_categories'], fn($c)=> $c !== $name && $c !== '默认'));
+    $extra['shelf_categories'] = array_values(array_filter($extra['shelf_categories'], function($c) use ($name) {
+        return $c !== $name && $c !== '默认';
+    }));
     user_extra_save($uid, $extra);
     header('Location: /profile.php?tab=bookshelf'); exit;
 }
@@ -73,7 +75,9 @@ $achievements = $stats->computeAchievements($uid);
 $timeline = $stats->buildUserTimeline($uid, 50);
 
 // Bookshelf data
-$rawShelf = array_values(array_filter($dm->readJson(BOOKSHELVES_FILE, []), fn($r)=> (int)($r['user_id']??0) === $uid));
+$rawShelf = array_values(array_filter($dm->readJson(BOOKSHELVES_FILE, []), function($r) use ($uid) {
+    return (int)($r['user_id'] ?? 0) === $uid;
+}));
 $novels = load_novels(); $novelMap=[]; foreach ($novels as $n) $novelMap[(int)$n['id']]=$n;
 $progress = $dm->readJson(READING_PROGRESS_FILE, []);
 $progMap = [];

@@ -4,7 +4,8 @@ require_once __DIR__ . '/DataManager.php';
 
 class Notifier
 {
-    private DataManager $dm;
+    /** @var DataManager */
+    private $dm;
     public function __construct()
     {
         $this->dm = new DataManager(DATA_DIR);
@@ -37,7 +38,9 @@ class Notifier
             if ($onlyUnread && !empty($n['read'])) return false;
             return true;
         }));
-        usort($rows, fn($a,$b)=> strcmp($b['created_at'], $a['created_at']));
+        usort($rows, function($a, $b) {
+            return strcmp($b['created_at'], $a['created_at']);
+        });
         return array_slice($rows, 0, $limit);
     }
 

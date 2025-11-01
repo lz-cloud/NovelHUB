@@ -6,8 +6,10 @@ require_once __DIR__ . '/Cache.php';
 
 class Statistics
 {
-    private DataManager $dm;
-    private Cache $cache;
+    /** @var DataManager */
+    private $dm;
+    /** @var Cache */
+    private $cache;
 
     public function __construct()
     {
@@ -19,7 +21,9 @@ class Statistics
     {
         $key = "user_stats_{$userId}";
         return $this->cache->remember($key, 60, function() use ($userId) {
-            $novels = array_values(array_filter(load_novels(), fn($n)=> (int)($n['author_id']??0) === $userId));
+            $novels = array_values(array_filter(load_novels(), function($n) use ($userId) {
+                return (int)($n['author_id'] ?? 0) === $userId;
+            }));
             $worksCount = count($novels);
             $totalChapters = 0; $totalWords = 0;
             foreach ($novels as $n) {
@@ -63,7 +67,7 @@ class Statistics
             // interactions: favorites received & comments received (as author)
             $favoritesReceived = 0; $commentsReceived = 0;
             // favorites: count shelves where novel_id is in my novels
-            $mineIds = array_map(fn($n)=> (int)$n['id'], $novels);
+            $mineIds = array_map(function($n) { return (int)$n['id']; }, $novels);
             foreach ($this->dm->readJson(BOOKSHELVES_FILE, []) as $r) if (in_array((int)($r['novel_id']??0), $mineIds, true)) $favoritesReceived++;
             // comments: iterate reviews by novel
             foreach ($mineIds as $nid) {
@@ -163,7 +167,9 @@ class Statistics
     public function computeAchievements(int $userId): array
     {
         $stats = $this->computeUserStats($userId);
-        $novels = array_values(array_filter(load_novels(), fn($n)=> (int)($n['author_id']??0) === $userId));
+        $novels = array_values(array_filter(load_novels(), function($n) use ($userId) {
+            return (int)($n['author_id'] ?? 0) === $userId;
+        }));
         $ach = [];
         // 阅读里程碑
         $ach[] = ['key'=>'read_1','name'=>'读完第一本书','achieved'=> $stats['finished_books'] >= 1];
@@ -218,7 +224,9 @@ class Statistics
             ];
         }
         // 发布新章
-        $myNovels = array_values(array_filter(load_novels(), fn($n)=> (int)($n['author_id']??0) === $userId));
+        $myNovels = array_values(array_filter(load_novels(), function($n) use ($userId) {
+            return (int)($n['author_id'] ?? 0) === $userId;
+        }));
         foreach ($myNovels as $n) {
             $chs = list_chapters((int)$n['id']);
             foreach ($chs as $c) {
@@ -240,7 +248,9 @@ class Statistics
                 'meta' => $r,
             ];
         }
-        usort($events, fn($a,$b)=> strcmp($b['created_at'],$a['created_at']));
+        usort($events, function($a, $b) {
+            return strcmp($b['created_at'], $a['created_at']);
+        });
         return array_slice($events, 0, $limit);
     }
 

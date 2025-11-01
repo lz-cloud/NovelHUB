@@ -5,7 +5,8 @@ require_once __DIR__ . '/Auth.php';
 
 class UserLimits
 {
-    private DataManager $dm;
+    /** @var DataManager */
+    private $dm;
     const USER_LIMITS_FILE = DATA_DIR . '/user_limits.json';
     const USER_USAGE_FILE = DATA_DIR . '/user_usage.json';
 

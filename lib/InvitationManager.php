@@ -4,7 +4,8 @@ require_once __DIR__ . '/DataManager.php';
 
 class InvitationManager
 {
-    private DataManager $dm;
+    /** @var DataManager */
+    private $dm;
 
     public function __construct()
     {

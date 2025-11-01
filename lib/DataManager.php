@@ -1,7 +1,8 @@
 <?php
 class DataManager
 {
-    private string $dataDir;
+    /** @var string */
+    private $dataDir;
 
     public function __construct(string $dataDir)
     {

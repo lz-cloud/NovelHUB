@@ -5,8 +5,10 @@ require_once __DIR__ . '/Membership.php';
 
 class AdManager
 {
-    private DataManager $dm;
-    private Membership $membership;
+    /** @var DataManager */
+    private $dm;
+    /** @var Membership */
+    private $membership;
     const AD_SETTINGS_FILE = DATA_DIR . '/ad_settings.json';
 
     public function __construct()

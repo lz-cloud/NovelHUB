@@ -3,7 +3,8 @@ require_once __DIR__ . '/../config.php';
 
 class Cache
 {
-    private string $dir;
+    /** @var string */
+    private $dir;
 
     public function __construct(string $dir = CACHE_DIR)
     {

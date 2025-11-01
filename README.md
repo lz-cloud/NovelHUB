@@ -182,34 +182,61 @@
 
 ## 4. 部署与配置指南
 
+### 快速开始（开发环境）
+
+使用 PHP 内置服务器：
+```bash
+chmod +x start_server.sh
+./start_server.sh
+# 或直接运行 PHP 内置服务器
+php -S 0.0.0.0:8000
+```
+
+### 系统要求
+
+- PHP 7.4 或更高版本（推荐 PHP 8.0+）
+- PHP 扩展：json、fileinfo、mbstring
+- Web 服务器：Apache 2.4+ 或 Nginx 1.18+
+
+### 系统诊断
+
+访问 `http://your-domain/diagnostic.php` 检查系统状态（生产环境请删除此文件）。
+
+### 部署步骤
+
 1) 目录写权限
-- 确保 Web 进程对以下目录有读写权限：
-  - `data/`
-  - `uploads/`（含子目录 `avatars/`、`covers/`）
-  - `chapters/`
+```bash
+chmod -R 775 data/ uploads/ chapters/
+chmod 664 data/*.json
+```
 
 2) 配置文件
-- `config.php` 中定义了数据与存储路径常量，按需调整为绝对路径：
-  - `DATA_DIR`、`UPLOADS_DIR`、`COVERS_DIR`、`AVATARS_DIR`、`CHAPTERS_DIR`
-- 首次运行时会自动创建必要目录
+- `config.php` 会自动创建必要目录
+- 生产环境请关闭错误显示
 
 3) Web 服务器
-- Apache：将此项目目录设为站点根目录（或将 DocumentRoot 指向该目录）
-- Nginx：FastCGI 转发到 PHP-FPM，根目录指向本项目目录
+- Apache：已包含 `.htaccess`，需启用 mod_rewrite
+- Nginx：参考 `README_DEPLOYMENT.md` 配置示例
 
-4) 初始数据
-- 项目已包含空的 `users.json`、`novels.json`、`user_bookshelves.json`，以及示例 `categories.json`
-- 首次运行会自动创建默认管理员账号（仅当 `users.json` 为空时）：
-  - 用户名：`admin`
-  - 邮箱：`admin@example.com`
-  - 初始密码：`Admin@123`
-  - 登录后请尽快在“个人资料”或通过“管理员后台”修改密码
-- 运行期会自动确保 `data/`、`uploads/`、`chapters/` 可写（尝试 `chmod 775/777`），以及相关 JSON 文件可写（尝试 `chmod 664/666`）
+4) 初始管理员
+- 用户名：`admin`
+- 密码：`Admin@123`
+- 登录后请立即修改密码
 
-5) 安全建议（可选增强）
-- 结合 CSRF Token
-- 上传文件类型/大小校验与图像处理
-- 更细粒度的权限/日志
+5) 故障排除
+- 遇到 HTTP 500 错误？参考 `TROUBLESHOOTING.md`
+- 检查 PHP 版本：`php -v`
+
+6) 安全建议
+- 启用 HTTPS 并更新证书
+- 删除 `diagnostic.php`、`test.php`、`phpinfo.php`
+- 定期备份 `data/`、`uploads/`、`chapters/`
+
+### 相关文档
+
+- `README_DEPLOYMENT.md` - 详细部署指南
+- `TROUBLESHOOTING.md` - 故障排除
+- `FEATURES_UPDATE.md` - 功能更新记录
 
 ---
 
