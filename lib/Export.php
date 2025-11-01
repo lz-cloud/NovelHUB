@@ -4,7 +4,8 @@ require_once __DIR__ . '/helpers.php';
 
 class Exporter
 {
-    private string $exportDir;
+    /** @var string */
+    private $exportDir;
 
     public function __construct(string $dir = null)
     {

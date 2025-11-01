@@ -5,7 +5,8 @@ require_once __DIR__ . '/helpers.php';
 
 class ReviewService
 {
-    private DataManager $dm;
+    /** @var DataManager */
+    private $dm;
     public function __construct()
     {
         $this->dm = new DataManager(DATA_DIR);

@@ -4,7 +4,8 @@ require_once __DIR__ . '/DataManager.php';
 
 class EmailManager
 {
-    private DataManager $dm;
+    /** @var DataManager */
+    private $dm;
 
     public function __construct()
     {

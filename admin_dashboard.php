@@ -154,13 +154,17 @@ $overview = $statsSvc->computePlatformOverview();
     <div class="row g-3 mt-2">
       <div class="col-12 col-lg-6"><div class="card"><div class="card-body"><h5>最新注册用户</h5>
         <ul class="list-group list-group-flush">
-          <?php usort($users, fn($a,$b)=> strcmp($b['created_at']??'', $a['created_at']??'')); foreach (array_slice($users,0,10) as $u): ?>
+          <?php usort($users, function($a, $b) {
+              return strcmp($b['created_at'] ?? '', $a['created_at'] ?? '');
+          }); foreach (array_slice($users,0,10) as $u): ?>
             <li class="list-group-item d-flex justify-content-between"><span><?php echo e($u['username']); ?></span><small class="text-muted"><?php echo e($u['created_at'] ?? ''); ?></small></li>
           <?php endforeach; ?>
         </ul>
       </div></div></div>
       <div class="col-12 col-lg-6"><div class="card"><div class="card-body"><h5>最新发布作品</h5>
-        <?php usort($novels, fn($a,$b)=> strcmp($b['created_at']??'', $a['created_at']??'')); ?>
+        <?php usort($novels, function($a, $b) {
+            return strcmp($b['created_at'] ?? '', $a['created_at'] ?? '');
+        }); ?>
         <ul class="list-group list-group-flush">
           <?php foreach (array_slice($novels,0,10) as $n): ?>
             <li class="list-group-item d-flex justify-content-between"><span><?php echo e($n['title']); ?></span><small class="text-muted"><?php echo e($n['created_at'] ?? ''); ?></small></li>
@@ -176,11 +180,31 @@ $overview = $statsSvc->computePlatformOverview();
       $from = $_GET['from'] ?? '';
       $to = $_GET['to'] ?? '';
       $list = $novels;
-      if ($q!=='') $list = array_values(array_filter($list, fn($n)=> stripos($n['title'] ?? '', $q) !== false));
-      if ($category>0) $list = array_values(array_filter($list, fn($n)=> in_array($category, array_map('intval',$n['category_ids']??[]), true)));
-      if ($status==='ongoing' || $status==='completed') $list = array_values(array_filter($list, fn($n)=> ($n['status']??'') === $status));
-      if ($from!=='') $list = array_values(array_filter($list, fn($n)=> strcmp(substr($n['created_at']??'',0,10), $from) >= 0));
-      if ($to!=='') $list = array_values(array_filter($list, fn($n)=> strcmp(substr($n['created_at']??'',0,10), $to) <= 0));
+      if ($q!=='') {
+        $list = array_values(array_filter($list, function($n) use ($q) {
+          return stripos($n['title'] ?? '', $q) !== false;
+        }));
+      }
+      if ($category>0) {
+        $list = array_values(array_filter($list, function($n) use ($category) {
+          return in_array($category, array_map('intval', $n['category_ids'] ?? []), true);
+        }));
+      }
+      if ($status==='ongoing' || $status==='completed') {
+        $list = array_values(array_filter($list, function($n) use ($status) {
+          return ($n['status'] ?? '') === $status;
+        }));
+      }
+      if ($from!=='') {
+        $list = array_values(array_filter($list, function($n) use ($from) {
+          return strcmp(substr($n['created_at'] ?? '', 0, 10), $from) >= 0;
+        }));
+      }
+      if ($to!=='') {
+        $list = array_values(array_filter($list, function($n) use ($to) {
+          return strcmp(substr($n['created_at'] ?? '', 0, 10), $to) <= 0;
+        }));
+      }
     ?>
     <form class="row g-2 mb-2" method="get">
       <input type="hidden" name="tab" value="content">
@@ -228,7 +252,9 @@ $overview = $statsSvc->computePlatformOverview();
         <div class="card"><div class="card-body">
           <h5 class="card-title">待审核内容</h5>
           <ul class="list-group list-group-flush">
-            <?php $pending = array_values(array_filter($audit, fn($a)=> ($a['status'] ?? 'pending') === 'pending')); foreach (array_slice($pending,0,10) as $a): ?>
+            <?php $pending = array_values(array_filter($audit, function($a) {
+                return ($a['status'] ?? 'pending') === 'pending';
+            })); foreach (array_slice($pending,0,10) as $a): ?>
               <li class="list-group-item small d-flex justify-content-between"><span><?php echo e($a['title'] ?? ''); ?></span><span class="text-muted"><?php echo e($a['created_at'] ?? ''); ?></span></li>
             <?php endforeach; if (!$pending) echo '<li class="list-group-item text-muted">暂无待审核</li>'; ?>
           </ul>
@@ -238,7 +264,9 @@ $overview = $statsSvc->computePlatformOverview();
         <div class="card"><div class="card-body">
           <h5 class="card-title">审核历史</h5>
           <ul class="list-group list-group-flush" style="max-height:240px;overflow:auto;">
-            <?php $history = array_values(array_filter($audit, fn($a)=> ($a['status'] ?? '') !== 'pending')); foreach (array_slice($history,0,20) as $a): ?>
+            <?php $history = array_values(array_filter($audit, function($a) {
+                return ($a['status'] ?? '') !== 'pending';
+            })); foreach (array_slice($history,0,20) as $a): ?>
               <li class="list-group-item small d-flex justify-content-between"><span><?php echo e(($a['title'] ?? '').' · '.($a['status'] ?? '')); ?></span><span class="text-muted"><?php echo e($a['updated_at'] ?? $a['created_at'] ?? ''); ?></span></li>
             <?php endforeach; if (!$history) echo '<li class="list-group-item text-muted">暂无历史记录</li>'; ?>
           </ul>
@@ -327,7 +355,9 @@ $overview = $statsSvc->computePlatformOverview();
         <form method="post" class="d-inline ms-2"><input type="hidden" name="action" value="clear_cache"><button class="btn btn-outline-secondary">清理缓存</button></form>
         <hr/>
         <h6>系统日志</h6>
-        <?php $ops = json_decode(@file_get_contents(ADMIN_OPERATIONS_FILE), true) ?: []; usort($ops, fn($a,$b)=> strcmp($b['created_at']??'', $a['created_at']??'')); ?>
+        <?php $ops = json_decode(@file_get_contents(ADMIN_OPERATIONS_FILE), true) ?: []; usort($ops, function($a, $b) {
+            return strcmp($b['created_at'] ?? '', $a['created_at'] ?? '');
+        }); ?>
         <ul class="list-group list-group-flush" style="max-height:280px;overflow:auto;">
           <?php foreach (array_slice($ops,0,50) as $o): ?>
             <li class="list-group-item small"><span class="text-muted"><?php echo e($o['created_at'] ?? ''); ?></span> · <strong><?php echo e($o['action'] ?? ''); ?></strong> · 用户：<?php echo e($o['username'] ?? ''); ?></li>

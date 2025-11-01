@@ -1,1 +1,16 @@
-[]
+[
+    {
+        "username": "admin",
+        "email": "admin@example.com",
+        "password_hash": "$2y$10$ddVYW0s3u2fXWv1zCMpZ\/u.TyFPzo0y0z\/BCK8TIVJ\/1sVoaTxhWe",
+        "role": "admin",
+        "status": "active",
+        "created_at": "2025-10-31T23:43:07+00:00",
+        "profile": {
+            "nickname": "管理员",
+            "avatar": null,
+            "bio": "系统初始管理员账号"
+        },
+        "id": 1
+    }
+]

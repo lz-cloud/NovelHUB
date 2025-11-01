@@ -5,7 +5,8 @@ require_once __DIR__ . '/Auth.php';
 
 class Membership
 {
-    private DataManager $dm;
+    /** @var DataManager */
+    private $dm;
 
     public function __construct()
     {
@@ -279,8 +280,10 @@ class Membership
 
 class DownloadManager
 {
-    private DataManager $dm;
-    private Membership $membership;
+    /** @var DataManager */
+    private $dm;
+    /** @var Membership */
+    private $membership;
     const DAILY_LIMIT = 3;
 
     public function __construct()

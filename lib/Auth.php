@@ -46,7 +46,8 @@ class Auth
 
 class OperationLog
 {
-    private DataManager $dm;
+    /** @var DataManager */
+    private $dm;
     public function __construct()
     {
         $this->dm = new DataManager(DATA_DIR);
