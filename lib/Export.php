@@ -92,7 +92,7 @@ class Exporter
 
     private function safeFileName(string $name): string
     {
-        $name = preg_replace('/[\\\/:*?\"<>|]+/', '-', $name);
+        $name = str_replace(['\\', '/', ':', '*', '?', '"', '<', '>', '|'], '-', $name);
         $name = trim($name);
         if ($name === '') $name = 'novel';
         return $name;
